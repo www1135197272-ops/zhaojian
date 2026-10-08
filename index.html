@@ -1,0 +1,2263 @@
+<!doctype html>
+<html lang="zh-Hans">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0806">
+<meta property="og:title" content="照见 · 镜窟 — Seeing Through">
+<meta property="og:description" content="持一盏灯入窟，照见千佛。一座为敦煌莫高窟第三二八窟菩萨而造的镜窟。A mirror cave for the kneeling bodhisattva of Mogao Cave 328.">
+<title>照见 · 镜窟</title>
+<meta name="description" content="照见 · 镜窟 — 一座为敦煌莫高窟第三二八窟菩萨而造的镜窟。A mirror cave for the bodhisattva of Mogao Cave 328.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400;1,500&family=IBM+Plex+Mono:wght@300;400&family=Noto+Serif+SC:wght@200;300;400;600&display=swap">
+<style>
+/* Layout: one dark cave (the canvas), text set like a sutra colophon — vertical title, captions low, a thread of years along the floor. */
+:root {
+  color-scheme: dark;
+  --bg: #090605;          /* cave dark */
+  --ink: #efe6d6;         /* lamp-lit paper */
+  --ink-2: rgba(239, 230, 214, 0.74);
+  --ink-3: rgba(239, 230, 214, 0.46);
+  --gold: #e8b86c;        /* lamp gold */
+  --seal: #a82a1e;        /* cinnabar seal */
+  --glass: rgba(16, 10, 7, 0.62);
+  --hair: rgba(239, 230, 214, 0.18);
+  --zh: "Noto Serif SC", "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  --en: "Cormorant Garamond", "Cormorant", "EB Garamond", Georgia, serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--zh); overflow: hidden; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible { outline: 1px solid var(--gold); outline-offset: 4px; }
+[hidden] { display: none !important; }
+#gl { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; cursor: none; }
+body:not(.inside) #gl { cursor: default; }
+#vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(120% 95% at 50% 46%, transparent 52%, rgba(0, 0, 0, 0.58) 100%); }
+#grain { position: fixed; inset: -50%; pointer-events: none; opacity: 0.07; mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.2 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); animation: grain 1.2s steps(6) infinite; }
+@keyframes grain { 0% { transform: translate(0, 0); } 33% { transform: translate(-3%, 2%); } 66% { transform: translate(2%, -3%); } 100% { transform: translate(0, 0); } }
+@media (prefers-reduced-motion: reduce) { #grain { animation: none; } }
+
+/* bilingual toggles */
+body[data-lang="zh"] [lang="en"]:not(.keep) { display: none !important; }
+body[data-lang="en"] [lang="zh"]:not(.keep) { display: none !important; }
+
+/* top bar */
+#top { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px clamp(16px, 3vw, 36px); pointer-events: none; z-index: 5; }
+#top > * { pointer-events: auto; }
+.mark { background: none; border: 0; padding: 4px 0; display: flex; align-items: baseline; gap: 10px; cursor: pointer; font-weight: 300; font-size: 20px; letter-spacing: 0.32em; white-space: nowrap; }
+.mark small { font-family: var(--mono); font-size: 10px; letter-spacing: 0.3em; color: var(--ink-3); }
+.tools { display: flex; align-items: center; gap: 8px; }
+.langs { display: flex; border: 1px solid var(--hair); border-radius: 999px; padding: 3px; background: rgba(9, 6, 5, 0.35); backdrop-filter: blur(6px); }
+.langs button { background: none; border: 0; border-radius: 999px; padding: 5px 10px; font-size: 12px; letter-spacing: 0.08em; color: var(--ink-3); cursor: pointer; white-space: nowrap; }
+.langs button[aria-pressed="true"] { background: rgba(232, 184, 108, 0.85); color: #1a120b; }
+.icon { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hair); background: rgba(9, 6, 5, 0.35); display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(6px); }
+.icon svg { width: 16px; height: 16px; stroke: var(--ink); fill: none; stroke-width: 1.4; }
+#sound.off .wave { display: none; } #sound:not(.off) .mute { display: none; }
+
+/* film */
+.pill { display: inline-flex; align-items: baseline; gap: 6px; height: 36px; box-sizing: border-box; padding: 0 14px; border-radius: 999px; border: 1px solid var(--hair); background: rgba(9, 6, 5, 0.35); backdrop-filter: blur(6px); cursor: pointer; font-size: 13px; letter-spacing: 0.18em; align-items: center; }
+.pill svg, .film-link svg { width: 10px; height: 10px; fill: var(--gold); }
+.pill em { font-family: var(--en); font-size: 13px; letter-spacing: 0.02em; color: var(--ink-3); }
+.film-link { justify-self: start; display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 2px 0; cursor: pointer; font-size: 14px; letter-spacing: 0.24em; color: var(--ink-2); }
+.film-link em { font-family: var(--en); font-size: 15px; letter-spacing: 0.02em; color: var(--ink-3); }
+.film-link .dur { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--gold); }
+#film { width: min(980px, calc(100vw - 32px)); text-align: left; }
+#film h3 { margin: 0 0 14px; font-weight: 400; font-size: 18px; letter-spacing: 0.3em; }
+#film h3 em { font-family: var(--en); font-size: 17px; letter-spacing: 0.02em; color: var(--ink-3); margin-left: 8px; }
+#film video { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 2px; }
+.film-note { margin: 12px 0 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink-3); }
+#film-close { position: absolute; top: 14px; right: 14px; }
+
+/* threshold */
+#intro { position: fixed; inset: 0; display: grid; place-items: center; padding: 72px 16px 32px; transition: opacity 1.6s ease, visibility 1.6s; z-index: 4; overflow-y: auto; }
+body.inside #intro { opacity: 0; visibility: hidden; pointer-events: none; }
+.colophon { width: min(640px, 100%); display: grid; grid-template-columns: auto 1fr; gap: clamp(20px, 5vw, 56px); align-items: start; }
+.title { display: flex; gap: 14px; align-items: flex-start; }
+.title h1 { writing-mode: vertical-rl; margin: 0; font-weight: 200; font-size: clamp(64px, 12vw, 116px); line-height: 1; letter-spacing: 0.18em; }
+.seal { width: 46px; height: 46px; background: var(--seal); color: #f6e2ce; display: grid; grid-template-columns: 1fr 1fr; place-items: center; font-weight: 600; font-size: 15px; line-height: 1; padding: 4px; box-sizing: border-box; margin-top: clamp(150px, 26vw, 252px); box-shadow: 0 0 0 1px rgba(246, 226, 206, 0.12) inset; }
+.copy { display: grid; gap: 22px; padding-top: 8px; min-width: 0; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.32em; color: var(--gold); }
+.en-title { font-family: var(--en); font-weight: 300; font-size: 22px; letter-spacing: 0.42em; color: var(--ink-2); margin-top: -10px; }
+.lede { margin: 0; font-weight: 300; font-size: 17px; line-height: 1.95; letter-spacing: 0.06em; color: var(--ink); max-width: 30em; }
+.lede-en { margin: -8px 0 0; font-family: var(--en); font-style: italic; font-size: 19px; line-height: 1.45; color: var(--ink-2); max-width: 32em; }
+.themes { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; font-size: 14px; letter-spacing: 0.2em; color: var(--ink-2); }
+.themes em { font-family: var(--en); font-size: 15px; letter-spacing: 0.02em; color: var(--ink-3); margin-left: 6px; }
+.load { display: grid; gap: 8px; }
+.load .bar { height: 1px; background: var(--hair); overflow: hidden; }
+.load .bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); transition: transform 0.3s; }
+#load-line { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 4px 14px; font-variant-numeric: tabular-nums; }
+#enter { justify-self: start; display: inline-flex; align-items: baseline; gap: 14px; padding: 14px 30px; border-radius: 999px; border: 1px solid rgba(232, 184, 108, 0.5); background: rgba(232, 184, 108, 0.06); font-size: 22px; letter-spacing: 0.5em; font-weight: 300; cursor: pointer; transition: background 0.4s, border-color 0.4s, opacity 0.4s; }
+#enter em { font-family: var(--en); font-size: 17px; letter-spacing: 0.06em; color: var(--ink-2); }
+#enter:disabled { opacity: 0.35; cursor: progress; }
+#enter.ready:hover { background: rgba(232, 184, 108, 0.16); border-color: var(--gold); }
+.how { font-size: 12px; letter-spacing: 0.18em; color: var(--ink-3); line-height: 1.8; }
+.how span[lang="en"] { font-family: var(--en); font-style: italic; font-size: 14px; letter-spacing: 0.02em; display: block; }
+
+/* captions */
+#sub { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(1100px, calc(100vw - 32px)); text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.7s ease; z-index: 3; }
+#sub.show { opacity: 1; }
+#sub-zh { margin: 0; font-weight: 400; font-size: clamp(17px, 2.2vw, 27px); letter-spacing: 0.14em; line-height: 1.6; text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9); text-wrap: balance; }
+#sub-en { margin: 6px 0 0; font-family: var(--en); font-style: italic; font-weight: 500; font-size: clamp(15px, 1.6vw, 21px); color: var(--ink-2); line-height: 1.35; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9); text-wrap: balance; }
+#hint { position: fixed; left: 50%; top: calc(76px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 12px; letter-spacing: 0.22em; color: var(--ink-2); opacity: 0; transition: opacity 0.8s; pointer-events: none; text-align: center; width: calc(100vw - 32px); }
+#hint [lang="en"] { font-family: var(--en); font-style: italic; font-size: 14px; letter-spacing: 0.02em; color: var(--ink-3); }
+#hint.show { opacity: 1; }
+#hint span { text-shadow: 0 0 14px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.8); }
+#hint .still { width: 22px; height: 22px; flex: none; align-self: center; transform: rotate(-90deg); }
+#hint .still circle { fill: none; stroke: rgba(232, 184, 108, 0.22); stroke-width: 1.2; }
+#hint .still .p { stroke: var(--gold); stroke-dasharray: 56.55; stroke-dashoffset: 56.55; stroke-linecap: round; }
+/* the lamp names the mural it lights: a museum label, like the cartouches beside Dunhuang paintings */
+#cap { position: fixed; left: clamp(16px, 3vw, 36px); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); z-index: 3; display: grid; gap: 3px; padding: 9px 14px 10px 12px; border-left: 2px solid var(--gold); background: linear-gradient(90deg, rgba(20, 13, 8, 0.72), rgba(20, 13, 8, 0)); font-size: 13px; letter-spacing: 0.14em; color: var(--ink); opacity: 0; transform: translateY(6px); transition: opacity 0.6s ease, transform 0.6s ease; pointer-events: none; max-width: min(460px, calc(100vw - 32px)); }
+#cap [lang="en"] { font-family: var(--en); font-style: italic; font-size: 14px; letter-spacing: 0.02em; color: var(--ink-3); }
+#cap.show { opacity: 1; transform: none; }
+.donor { display: inline-grid; gap: 4px; margin-top: 16px; padding: 10px 18px; border: 1px solid rgba(232, 184, 108, 0.35); background: rgba(232, 184, 108, 0.06); text-decoration: none; color: var(--ink); }
+.donor b { font-weight: 400; font-size: 15px; letter-spacing: 0.32em; }
+.donor b i { font-style: normal; font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em; color: var(--gold); }
+.donor em { font-family: var(--en); font-size: 14px; color: var(--ink-3); }
+.donor:hover { border-color: rgba(232, 184, 108, 0.7); }
+
+/* continue + gate */
+#next, #gate { position: fixed; right: clamp(16px, 3vw, 36px); bottom: calc(92px + env(safe-area-inset-bottom, 0px)); z-index: 4; display: inline-flex; align-items: baseline; gap: 10px; padding: 11px 22px; border-radius: 999px; border: 1px solid var(--hair); background: var(--glass); backdrop-filter: blur(8px); font-size: 16px; letter-spacing: 0.32em; cursor: pointer; animation: rise 0.8s ease both; }
+#next em, #gate em { font-family: var(--en); font-size: 15px; letter-spacing: 0.04em; color: var(--ink-2); }
+#gate { left: 50%; right: auto; transform: translateX(-50%); bottom: 42vh; border-color: rgba(232, 184, 108, 0.6); padding: 14px 30px; font-size: 20px; }
+@keyframes rise { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+
+/* the thread of years */
+nav { position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0px); padding: 0 clamp(16px, 3vw, 36px) 20px; z-index: 4; pointer-events: none; }
+body:not(.inside) nav { opacity: 0; }
+#rail { --p: 0; position: relative; display: grid; grid-template-columns: repeat(10, 1fr); margin: 0; padding: 18px 0 0; list-style: none; pointer-events: auto; }
+#rail::before, #rail::after { content: ""; position: absolute; left: 0; top: 18px; height: 1px; }
+#rail::before { right: 0; background: var(--hair); }
+#rail::after { width: calc(var(--p) * 100%); background: linear-gradient(90deg, rgba(232, 184, 108, 0.2), var(--gold)); }
+#rail li { min-width: 0; }
+#rail button { position: relative; width: 100%; background: none; border: 0; padding: 12px 0 0; display: grid; justify-items: start; gap: 2px; cursor: pointer; text-align: left; color: var(--ink-3); transition: color 0.4s; }
+#rail button i { position: absolute; left: 0; top: -3px; width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3); transition: background 0.4s, box-shadow 0.4s; }
+#rail button.now { color: var(--ink); }
+#rail button.now i { background: var(--gold); box-shadow: 0 0 12px 2px rgba(232, 184, 108, 0.7); }
+#rail .y { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
+#rail .z { font-size: 13px; letter-spacing: 0.2em; }
+#rail .e { font-family: var(--en); font-style: italic; font-size: 13px; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+@media (max-width: 760px) {
+  #cap { bottom: calc(196px + env(safe-area-inset-bottom, 0px)); font-size: 12px; }
+  #rail .e, #rail .y { display: none; }
+  #rail button:not(.now) .z { opacity: 0; }
+  #rail .z { font-size: 12px; white-space: nowrap; }
+  #sub { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+  #next { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+  .colophon { grid-template-columns: 1fr; }
+  .title { justify-content: center; }
+  .seal { margin-top: auto; }
+  .langs button { padding: 4px 7px; font-size: 11px; letter-spacing: 0.02em; }
+  .pill { padding: 0 10px; } .pill em { display: none; }
+  .mark { font-size: 17px; letter-spacing: 0.24em; }
+  .mark small { display: none; }
+  .eyebrow { letter-spacing: 0.16em; line-height: 1.7; }
+  .title h1 { font-size: 84px; }
+  .en-title { font-size: 18px; letter-spacing: 0.32em; }
+  .lede { font-size: 16px; line-height: 1.9; }
+  .lede-en { font-size: 17px; }
+}
+
+/* end + sources panels */
+.panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 140px); overflow-y: auto; z-index: 6; padding: clamp(22px, 4vw, 40px); box-sizing: border-box; background: var(--glass); border: 1px solid var(--hair); border-radius: 4px; backdrop-filter: blur(14px); animation: rise 1.2s ease both; }
+#end { text-align: center; }
+#end h2 { margin: 0; font-weight: 300; font-size: clamp(34px, 6vw, 54px); letter-spacing: 0.42em; padding-left: 0.42em; }
+#end .tag { margin: 8px 0 0; font-family: var(--en); font-style: italic; font-size: 21px; color: var(--ink-2); }
+#end .line { margin: 26px 0 0; font-weight: 300; font-size: 15px; letter-spacing: 0.2em; line-height: 2; color: var(--ink-2); }
+#end .line em { display: block; font-family: var(--en); font-size: 16px; letter-spacing: 0.02em; color: var(--ink-3); }
+.cta { display: inline-flex; align-items: baseline; gap: 12px; margin-top: 28px; padding: 14px 26px; border-radius: 999px; background: var(--gold); color: #1a120b; text-decoration: none; font-size: 16px; letter-spacing: 0.16em; font-weight: 400; }
+.cta em { font-family: var(--en); font-size: 15px; letter-spacing: 0.02em; }
+.cta:hover { background: #f1c985; }
+.space { display: block; margin-top: 10px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; color: var(--ink-3); }
+.row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px; }
+.ghost { background: none; border: 1px solid var(--hair); border-radius: 999px; padding: 8px 16px; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; color: var(--ink-2); }
+.ghost em { font-family: var(--en); letter-spacing: 0.02em; color: var(--ink-3); margin-left: 6px; }
+#share-note { margin-top: 10px; min-height: 1em; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--gold); }
+#share-url { width: 100%; margin-top: 8px; background: transparent; border: 1px solid var(--hair); color: var(--ink); padding: 8px; font-family: var(--mono); font-size: 12px; box-sizing: border-box; }
+#sources { width: min(680px, calc(100vw - 32px)); text-align: left; }
+#sources h3 { margin: 0 0 4px; font-weight: 400; font-size: 18px; letter-spacing: 0.3em; }
+#sources h4 { margin: 22px 0 8px; font-family: var(--mono); font-weight: 400; font-size: 11px; letter-spacing: 0.28em; color: var(--gold); }
+#sources ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+#sources li { font-size: 13px; line-height: 1.7; color: var(--ink-2); letter-spacing: 0.04em; }
+#sources li span[lang="en"] { font-family: var(--en); font-size: 15px; letter-spacing: 0.01em; color: var(--ink-3); }
+#sources a { color: var(--ink); text-decoration-color: rgba(232, 184, 108, 0.5); text-underline-offset: 3px; }
+#sources-close { position: sticky; top: 0; float: right; }
+#sources p { font-size: 13px; line-height: 1.8; color: var(--ink-3); }
+</style>
+
+<canvas id="gl" aria-label="照见 · 镜窟 — 交互三维洞窟 / an interactive 3D cave"></canvas>
+
+<header id="top">
+  <button id="home" class="mark" type="button" data-open-sources>照见<small>MIRROR GROTTO</small></button>
+  <div class="tools">
+    <button id="film-open" class="pill" type="button" data-open-film><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6.5v11l9-5.5z"/></svg><span lang="zh">影片</span><em lang="en">Film</em></button>
+    <div class="langs" role="group" aria-label="字幕 Subtitles">
+      <button type="button" data-lang="zh" aria-pressed="false">中</button>
+      <button type="button" data-lang="both" aria-pressed="true">中·EN</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <button id="sound" class="icon" type="button" aria-label="声音 Sound" aria-pressed="false">
+      <svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg>
+    </button>
+    <button id="full" class="icon" type="button" aria-label="全屏 Fullscreen">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
+</header>
+
+<section id="intro" aria-label="入口 Threshold">
+  <div class="colophon">
+    <div class="title">
+      <h1>照见</h1>
+      <div class="seal" aria-hidden="true"><span>镜</span><span>窟</span><span>照</span><span>见</span></div>
+    </div>
+    <div class="copy">
+      <div class="eyebrow">敦煌 · 莫高窟 · 第三二八窟 &nbsp;/&nbsp; MOGAO CAVE 328</div>
+      <div class="en-title" lang="en">SEEING THROUGH</div>
+      <p class="lede" lang="zh">一九二四年，这尊跪着的菩萨离开了敦煌。我们用它的三维扫描、一千多年前的壁画和四面镜子，为它重造一窟。持一盏灯进去，看看它朝拜的是谁。</p>
+      <p class="lede-en" lang="en">In 1924 this kneeling bodhisattva left Dunhuang. With its 3D scan, murals over a thousand years old and four mirrors, we build it a cave again. Carry a lamp inside and see whom it bows to.</p>
+      <ul class="themes"><li>时间<em lang="en">Time</em></li><li>镜<em lang="en">Mirror</em></li><li>生灭<em lang="en">Arising &amp; ceasing</em></li><li>空色<em lang="en">Emptiness &amp; form</em></li></ul>
+      <div class="load"><div class="bar"><i id="load-bar"></i></div><div id="load-line"></div></div>
+      <button id="enter" type="button" disabled>入窟<em>Enter</em></button>
+      <button class="film-link" type="button" data-open-film><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6.5v11l9-5.5z"/></svg><span lang="zh">先看影片</span><em lang="en">Or watch the film</em><span class="dur">2:54</span></button>
+      <div class="how"><span lang="zh">移动：持灯 · 拖动：环顾 · → 继续 · 建议戴耳机</span><span lang="en">Move to carry the lamp · drag to look around · → to continue · headphones on</span></div>
+    </div>
+  </div>
+</section>
+
+<div id="hint" aria-live="polite"></div>
+<div id="cap" aria-live="polite"></div>
+<div id="sub" aria-live="polite"><p id="sub-zh" lang="zh"></p><p id="sub-en" lang="en"></p></div>
+<button id="next" type="button" hidden>继续<em lang="en">Continue</em>→</button>
+<button id="gate" type="button" hidden>点灯<em lang="en">Light the lamp</em></button>
+<nav aria-label="章节 Chapters"><ol id="rail"></ol></nav>
+
+<section id="end" class="panel" hidden aria-label="一室 One space">
+  <h2>千灯一室</h2>
+  <p class="tag" lang="en">A thousand lamps. One space.</p>
+  <p class="line"><span lang="zh">灯可以换，光一直在。</span><em lang="en">Change the lamp. The light stays.</em></p>
+  <a class="cta" href="https://agent.space/" target="_blank" rel="noopener"><span lang="zh">去 agent.space 点亮你的一室</span><em lang="en">Light your own room ↗</em></a>
+  <a class="donor" href="https://agent.space/" target="_blank" rel="noopener"><b>功德主 <i>agent.space</i> 一心供养</b><em>Patron of this cave — many agents, carving in one persistent space</em></a>
+  <div class="row">
+    <button id="share" class="ghost" type="button">传灯<em lang="en">Pass the lamp</em></button>
+    <button id="again" class="ghost" type="button">再入一次<em lang="en">Enter again</em></button>
+    <button class="ghost" type="button" data-open-film>影片<em lang="en">Film</em></button>
+    <button class="ghost" type="button" data-open-sources>出处<em lang="en">Sources</em></button>
+  </div>
+  <div id="share-note" aria-live="polite"></div>
+  <input id="share-url" type="text" readonly hidden aria-label="链接 Link">
+</section>
+
+<section id="film" class="panel" hidden role="dialog" aria-modal="true" aria-label="影片 Film">
+  <button id="film-close" class="icon" type="button" aria-label="关闭 Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <h3>照见 · 镜窟 <em lang="en">Seeing Through — the film</em></h3>
+  <video id="film-video" controls playsinline preload="none" poster="film/poster.jpg" src="film/zhaojian_540p.mp4"></video>
+  <p class="film-note"><span lang="zh">2 分 54 秒 · 中文旁白 · 中英字幕 · 页面内为 540p 预览</span><span lang="en"> 2:54 · Mandarin narration · Chinese/English subtitles · 540p preview</span></p>
+</section>
+
+<section id="sources" class="panel" hidden role="dialog" aria-modal="true" aria-label="出处 Sources">
+  <button id="sources-close" class="icon" type="button" aria-label="关闭 Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <h3>出处 · Sources</h3>
+  <p>这是一座想象的窟，不是第三二八窟的复原。<span lang="en"> An imagined cave, not a reconstruction of Cave 328.</span></p>
+  <h4>塑像 · SCULPTURE</h4>
+  <ul><li>跪姿供养菩萨，莫高窟第三二八窟，唐，七世纪末；1924 年被带离，现藏哈佛艺术博物馆（1924.70）。三维摄影测量：Harvard Art Museums，<a href="https://sketchfab.com/3d-models/kneeling-attendant-bodhisattva-129635ad396947a7975c9e5ba6095f32" target="_blank" rel="noopener">CC BY</a>。本作将其表面重采样为 683,529 粒。<span lang="en"> Kneeling Attendant Bodhisattva, Mogao Cave 328, late 7th c.; removed 1924, Harvard Art Museums 1924.70. Photogrammetry by Harvard Art Museums (CC BY), resampled here into 683,529 points.</span></li></ul>
+  <h4>壁画 · MURALS (WIKIMEDIA COMMONS)</h4>
+  <ul>
+    <li><a href="https://commons.wikimedia.org/wiki/File:Mogao_Caves_(54376966232).jpg" target="_blank" rel="noopener">千佛</a> · <a href="https://commons.wikimedia.org/wiki/File:Mogao_Caves_(54378080188).jpg" target="_blank" rel="noopener">藻井</a> — 摄影 Xiquinho Silva，CC BY 2.0<span lang="en"> — thousand Buddhas, caisson ceiling; photos by Xiquinho Silva, CC BY 2.0</span></li>
+    <li><a href="https://commons.wikimedia.org/wiki/File:Dunhuang217.jpg" target="_blank" rel="noopener">第217窟 观无量寿经变</a>（西壁 west wall）· 公有领域 public domain</li>
+    <li><a href="https://commons.wikimedia.org/wiki/File:Mural_Avolokitesvara.jpg" target="_blank" rel="noopener">第57窟 观音</a>（南壁 south）· <a href="https://commons.wikimedia.org/wiki/File:Vimalakirti_debating_Manjusri,_Tang_Dynasty.jpg" target="_blank" rel="noopener">第103窟 维摩诘</a> · <a href="https://commons.wikimedia.org/wiki/File:Offering_Bodhisattva_from_Cave_401,_Mogao_Caves,_Dunhuang.jpg" target="_blank" rel="noopener">第401窟 供养菩萨</a>（东壁 east）· 公有领域</li>
+    <li><a href="https://commons.wikimedia.org/wiki/File:%E9%B9%BF%E7%8E%8B%E6%9C%AC%E7%94%9F%E6%95%85%E4%BA%8B%E7%95%AB.jpg" target="_blank" rel="noopener">第257窟 鹿王本生</a>（壁脚 dado）· <a href="https://commons.wikimedia.org/wiki/File:%E8%8E%AB%E9%AB%98%E7%AA%9F%E4%BA%94%E8%87%BA%E5%B1%B1%E5%9C%96.jpg" target="_blank" rel="noopener">第61窟 五台山图</a> · <a href="https://commons.wikimedia.org/wiki/File:Mogao_Cave_329.jpg" target="_blank" rel="noopener">第329窟</a>（甬道 corridor）· 公有领域</li>
+    <li>莲花纹地砖为程序生成，仿唐代方砖。<span lang="en"> Lotus floor tiles are procedural, after Tang tiles.</span></li>
+  </ul>
+  <h4>文字 · TEXTS</h4>
+  <ul>
+    <li>“忽见金光，状有千佛” — 李克让《重修莫高窟佛龛碑》（698）</li>
+    <li>法藏十镜 · “互影交光” — 《宋高僧传 · 法藏传》</li>
+    <li>“时时勤拂拭”“菩提本无树”“一灯能除千年暗” — 《六祖坛经》</li>
+    <li>“过去心不可得”“一切有为法” — 《金刚经》 · “不生不灭，不增不减” — 《心经》</li>
+    <li>“一灯然百千灯，明终不尽” — 《维摩诘经 · 菩萨品》 · 一室千灯 — 华严之喻（意译 paraphrase）</li>
+  </ul>
+  <h4>声音 · SOUND</h4>
+  <ul><li>中文旁白为语音合成；配乐与音效为本作合成。<span lang="en"> Mandarin narration is synthesised; score and sound were synthesised for this piece.</span></li></ul>
+  <h4>一室 · ONE SPACE</h4>
+  <p>“一室千灯，光光相入”：许多灯在同一间屋里，各自照满全室，互不相碍。这也是 <a href="https://agent.space/" target="_blank" rel="noopener">agent.space</a> 的样子——许多 Agent，同在一个持久的云端空间里接力。<span lang="en"> A thousand lamps in one room, each filling it, none in another’s way — the picture behind agent.space: many agents relaying work in one persistent cloud space.</span></p>
+</section>
+
+<script type="module">
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.181.0/three.module.min.js';
+// 照见 · 镜窟 — shared WebGL engine for the interactive piece and the film renderer.
+// Room-local frame: x east(+)/west(-), y up, z south(+)/north(-). The kneeling
+// bodhisattva sits at the origin facing west (-x). Mirror reflections are drawn as an
+// unfolded lattice of mirrored room copies (cell i,j -> x = i*2HX + (-1)^i x').
+
+const ROOM = {
+  HX: 1.8, HZ: 1.8, WALL_H: 2.8, CEIL_TOP: 3.9, CAIS_HALF: 0.6, CAIS_DEPTH: 0.22,
+  DADO: 0.42, PANEL_TOP: 2.42, MARGIN: 0.18, DOOR_HALF: 0.5, DOOR_H: 2.1, JAMB: 0.12,
+  ALTAR_HALF: 0.55, ALTAR_H: 0.16, CORR_LEN: 3.4, CORR_HALF: 0.55, CORR_H: 2.2,
+  STATUE_H: 1.219, QF_W: 1.2, QF_H: 1.2 * 1524 / 2048,
+};
+
+const DEFAULT_STATE = () => ({
+  time: 0,
+  camPos: [6.6, 1.5, 0], camTarget: [0, 1.4, 0], camFov: 44, camRoll: 0,
+  lampPos: [5.8, 1.3, 0.25], lampPower: 1.0, lampFlicker: 1, lampVisible: 1,
+  doorLight: 0.0, gold: 0.0, ambient: 0.004, exposure: 1.0,
+  age: 0.0, appear: 0.0, wind: 0.0, ghost: 0.0, scatter: 0.0,
+  doorFill: 0.0, dissolve: 0.0, mirrorReveal: 0.0, ceilFade: 0.0, wallFade: 0.0,
+  statueFade: 0.0, dust: 0.0, sand: 0.0, lampsWave: -1.0, lampsOn: 0.0, ownLight: 0.0,
+  fog: 0.035, corridor: 1.0, imageLamps: 0.0, glint: 0.0, vignette: 1.0,
+});
+
+// the held lamp, as seen from reflection depth b: with uLampDelay on, deeper reflections
+// show where the lamp was a moment ago ("the deeper the reflection, the earlier the moment")
+const LAMP_HIST = /* glsl */`
+uniform vec3 uLampU; uniform vec3 uLampHist[13]; uniform float uLampDelay;
+vec3 lampFor(float b){ if (uLampDelay < 0.5) return uLampU; int i = int(clamp(floor(b + 0.5), 0.0, 12.0)); return uLampHist[i]; }
+`;
+// every shader that includes GLSL_COMMON sets the global uLamp first thing in main()
+const lampInit = (src, init) => {
+  if (!src.includes('void main(){')) throw new Error('lampInit: no main');
+  return src.replace('void main(){', `void main(){ uLamp = ${init};`);
+};
+
+const GLSL_COMMON = /* glsl */`
+uniform float uTime, uExposure, uFog, uAmbient, uDoorLight, uGold, uImageLamps, uAge;
+${LAMP_HIST}
+vec3 uLamp; uniform float uLampPower;
+uniform vec3 uTint;
+uniform float uMirrorReveal;
+uniform sampler2D uNoise;
+uniform float uSmoke, uShadow, uPost;
+const float HX = ${ROOM.HX.toFixed(3)}, HZ = ${ROOM.HZ.toFixed(3)};
+vec3 aces(vec3 x){ const float a=2.51,b=0.03,c=2.43,d=0.59,e=0.14; return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.,1.); }
+vec3 toSRGB(vec3 c){ c=max(c,0.); return mix(c*12.92, 1.055*pow(c,vec3(1./2.4))-0.055, step(0.0031308,c)); }
+vec3 finish(vec3 c){ return uPost > 0.5 ? c*uExposure : toSRGB(aces(c*uExposure)); }
+vec3 pointLight(vec3 P, vec3 N, vec3 L0, vec3 col, float power, float wrap){
+  vec3 L = L0 - P; float d2 = dot(L,L); vec3 l = L*inversesqrt(d2+1e-6);
+  float ndl = max((dot(N,l)+wrap)/(1.+wrap),0.);
+  return col*power*ndl/(d2+0.10);
+}
+vec3 lampCol(){ return vec3(1.0,0.62,0.30); }
+// slow, smoky modulation of the lamp light (heat shimmer / soot drifting through the flame)
+float smokeCookie(vec3 P){
+  vec3 d = normalize(P - uLamp);
+  vec2 q = vec2(atan(d.z, d.x)*0.55, d.y*0.9);
+  float a = texture2D(uNoise, q*0.8 + vec2(uTime*0.011, -uTime*0.027)).r;
+  float b = texture2D(uNoise, q*2.1 + vec2(-uTime*0.023, -uTime*0.041)).g;
+  return mix(1.0, 0.55 + 0.9*(a*0.6 + b*0.4), uSmoke);
+}
+// soft shadow of the kneeling figure (three ellipsoid proxies) cast by the lamp
+float occ(vec3 P, vec3 Lp, vec3 c, vec3 r){
+  vec3 o = (P - c)/r, d = (Lp - P)/r;
+  float t = clamp(-dot(o,d)/max(dot(d,d),1e-6), 0.0, 1.0);
+  float m = length(o + d*t);
+  return (1.0 - smoothstep(0.62, 1.18, m)) * step(0.02, t) * step(t, 0.98);
+}
+float statueShadow(vec3 P){
+  if (uShadow <= 0.001) return 1.0;
+  float o = occ(P, uLamp, vec3(0.0, 0.30, 0.0), vec3(0.36, 0.16, 0.36));
+  o = max(o, occ(P, uLamp, vec3(0.03, 0.74, 0.0), vec3(0.22, 0.42, 0.21)));
+  o = max(o, occ(P, uLamp, vec3(-0.02, 1.25, 0.0), vec3(0.12, 0.17, 0.12)));
+  return 1.0 - o*0.88*uShadow;
+}
+vec3 lightAll(vec3 P, vec3 N){
+  vec3 c = pointLight(P,N,uLamp,lampCol(),uLampPower,0.25) * smokeCookie(P);
+  if (uImageLamps>0.001){
+    vec3 t = vec3(0.86,0.70,0.46)*uImageLamps;
+    c += t*pointLight(P,N,vec3(-2.*HX-uLamp.x,uLamp.y,uLamp.z),lampCol(),uLampPower,0.25);
+    c += t*pointLight(P,N,vec3( 2.*HX-uLamp.x,uLamp.y,uLamp.z),lampCol(),uLampPower,0.25);
+    c += t*pointLight(P,N,vec3(uLamp.x,uLamp.y,-2.*HZ-uLamp.z),lampCol(),uLampPower,0.25);
+    c += t*pointLight(P,N,vec3(uLamp.x,uLamp.y, 2.*HZ-uLamp.z),lampCol(),uLampPower,0.25);
+  }
+  // daylight / dawn gold through the east door (door centre x=HX, y~1.05)
+  float dl = uDoorLight + uGold*1.6;
+  if (dl>0.001){
+    vec3 dc = mix(vec3(1.0,0.86,0.66), vec3(1.0,0.66,0.22), clamp(uGold,0.,1.));
+    vec3 D = vec3(HX+2.6,1.25,0.0);
+    vec3 L = D-P; float d2=dot(L,L); vec3 l=L*inversesqrt(d2);
+    float cone = smoothstep(0.55,0.95, dot(-l, normalize(vec3(-1.,-0.12,0.))));
+    c += dc*dl*cone*max(dot(N,l),0.)*2.2/(d2*0.35+1.0);
+  }
+  return c + vec3(0.55,0.62,0.75)*uAmbient;
+}
+`;
+
+const HASH = /* glsl */`
+uint pcg(uint v){ uint s=v*747796405u+2891336453u; uint w=((s>>((s>>28u)+4u))^s)*277803737u; return (w>>22u)^w; }
+float h1(uint v){ return float(pcg(v))/4294967295.0; }
+`;
+
+// ---------------------------------------------------------------- wall / surface shader
+const SURF_VS = /* glsl */`
+${LAMP_HIST}
+attribute vec3 iOffset; attribute vec3 iSign; attribute float iBounce;
+varying vec3 vLocal; varying vec3 vN; varying vec2 vUv; varying float vBounce; varying float vParity; varying float vDist; varying vec3 vCamL;
+varying vec3 vLampD;
+uniform float uMirrorRevealV;
+void main(){
+  vLampD = lampFor(iBounce);
+  vec3 local = position;
+  vCamL = (cameraPosition - iOffset)*iSign;
+  vec3 world = local*iSign + iOffset;
+  vLocal = local; vN = normal; vUv = uv; vBounce = iBounce; vParity = iSign.x*iSign.y*iSign.z;
+  vec4 mv = viewMatrix*vec4(world,1.);
+  vDist = length(mv.xyz);
+  gl_Position = projectionMatrix*mv;
+  if (iBounce > uMirrorRevealV + 0.999) gl_Position = vec4(2.,2.,2.,1.);
+}`;
+
+const SURF_FS = lampInit(/* glsl */`
+${GLSL_COMMON}
+varying vec3 vLampD;
+uniform sampler2D uMap; uniform sampler2D uMap2; uniform vec2 uUvScale; uniform vec2 uUvOffset;
+uniform float uDissolve, uWallFade, uCeilFade, uDoorFill, uGlint, uFloorFade;
+uniform vec3 uBase; uniform float uKind; // 0 image, 1 floor, 2 door sand, 3 altar, 4 plaster
+uniform float uIsPanel, uIsCeil;
+varying vec3 vLocal; varying vec3 vN; varying vec2 vUv; varying float vBounce; varying float vParity; varying float vDist; varying vec3 vCamL;
+vec3 ageColor(vec3 c, vec2 uv, float a){
+  if (a<=0.001) return c;
+  vec4 nz = texture2D(uNoise, uv*vec2(2.3,2.3));
+  float lum = dot(c, vec3(0.2126,0.7152,0.0722));
+  float warm = clamp((c.r-c.b)*3.0+0.2,0.,1.);
+  float ox = smoothstep(0.18,0.55,lum)*warm*a;            // lead pigments darken
+  c = mix(c, c*vec3(0.20,0.16,0.14)+vec3(0.010,0.007,0.005), ox*0.8);
+  c = mix(c, vec3(lum)*vec3(1.05,0.93,0.78), a*0.30);     // fade, yellow
+  c *= 1.0 - a*0.28;
+  float fz = texture2D(uNoise, uv*vec2(9.0,9.0)).b*0.6 + nz.b*0.4;
+  float flake = smoothstep(a*0.30, a*0.30+0.05, fz);   // plaster shows through
+  c = mix(vec3(0.42,0.33,0.24), c, flake);
+  float dust = smoothstep(0.55, 0.0, vLocal.y)*a*0.7 + (nz.g-0.5)*0.12*a;
+  c = mix(c, vec3(0.50,0.40,0.29), clamp(dust,0.,0.8));
+  return c;
+}
+void main(){
+  vec3 N = normalize(vN);
+  vec2 uv = vUv*uUvScale + uUvOffset;
+  vec3 alb; vec3 emis = vec3(0.);
+  vec4 nz = texture2D(uNoise, vLocal.xz*0.21 + vLocal.y*0.13 + vUv*0.37);
+  if (uKind < 0.5) {
+    alb = texture2D(uMap, uv).rgb;
+  } else if (uKind < 1.5) { // floor: Tang lotus tiles (0.36 m) with relief
+    vec2 fuv = vLocal.xz/0.72 + 0.5;
+    alb = texture2D(uMap, fuv).rgb * vec3(1.02,0.97,0.9);
+    float e = 1.0/1536.0;
+    float h0 = texture2D(uMap2, fuv).r, hx = texture2D(uMap2, fuv+vec2(e*1.5,0.)).r, hz = texture2D(uMap2, fuv+vec2(0.,e*1.5)).r;
+    N = normalize(vec3(-(hx-h0)*9.0, 1.0, -(hz-h0)*9.0));
+    float edge = max(abs(vLocal.x)/HX, abs(vLocal.z)/HZ);
+    alb = mix(alb, vec3(0.42,0.34,0.25), smoothstep(0.80,1.0,edge)*(0.25+uAge*0.6));
+    alb *= 0.85 + 0.3*h0;
+  } else if (uKind < 2.5) { // door sand curtain
+    alb = vec3(0.40,0.30,0.20)*(0.7+0.5*nz.r);
+  } else if (uKind < 3.5) { // altar platform
+    alb = uBase*(0.85+0.25*nz.r);
+    float rim = smoothstep(0.012,0.0,abs(vLocal.y-0.13));
+    alb = mix(alb, vec3(0.62,0.55,0.45), rim);
+  } else if (uKind < 4.5) { // plaster
+    alb = uBase*(0.8+0.35*nz.r);
+  } else { // bronze mirror frame with malachite patina
+    vec4 pn = texture2D(uNoise, vUv*vec2(7.0,1.3) + vLocal.xz*0.3);
+    alb = mix(vec3(0.36,0.23,0.10), vec3(0.16,0.27,0.20), smoothstep(0.55,0.8,pn.r)*0.7);
+  }
+  alb = ageColor(alb, vUv*0.5+vLocal.xz*0.05, uAge*(uKind<0.5||uKind>3.5?1.:0.4));
+
+#ifdef FX
+  // door: sand fills the opening from its edges, then turns to glass
+  if (uKind > 1.5 && uKind < 2.5) {
+    float ex = 1.0 - abs(vUv.x-0.5)*2.0; float ey = 1.0 - vUv.y;  ey = min(ey, vUv.y*3.0);
+    float fill = min(ex, ey)*0.9 + nz.g*0.25;
+    if (fill > uDoorFill*1.15) discard;
+    float rim = smoothstep(0.06,0.0, uDoorFill*1.15-fill);
+    emis += vec3(1.0,0.6,0.2)*rim*0.9*(1.0-uDissolve);
+  }
+  // panels dissolve into mirror (centre first) with a burning gold edge
+  if (uIsPanel > 0.5 && uDissolve > 0.0) {
+    float d = nz.r*0.42 + length((vUv-0.5)*vec2(1.0,0.66))*0.95;
+    float e = d - uDissolve*1.32;
+    if (e < 0.0) discard;
+    float glow = 1.0 - smoothstep(0.0, 0.022, e);
+    emis += vec3(1.0,0.48,0.12)*glow*glow*1.6;
+  }
+  // emptiness: everything built dissolves
+  if (uWallFade > 0.0) {
+    float d = nz.a*0.55 + (1.0 - clamp(vLocal.y/4.2,0.,1.))*0.25 + texture2D(uNoise, vUv*3.1).r*0.2;
+    float e = d - uWallFade*1.1;
+    if (e < 0.0) discard;
+    emis += vec3(1.0,0.6,0.25)*(1.0-smoothstep(0.0,0.035,e))*2.0;
+  }
+  if (uKind > 4.5) {
+    float tip = uDissolve*1.25 - vUv.x;
+    if (tip < 0.0) discard;
+    emis += vec3(1.0,0.62,0.25)*(1.0 - smoothstep(0.0, 0.05, tip))*4.0;
+  }
+  if (uIsCeil > 0.5 && uCeilFade > 0.0) {
+    float e = nz.b*0.5 + 0.5 - uCeilFade*1.05;
+    if (e < 0.0) discard;
+    emis += vec3(1.0,0.6,0.25)*(1.0-smoothstep(0.0,0.03,e))*1.5;
+  }
+#endif
+  vec3 L = lightAll(vLocal, N) * statueShadow(vLocal + N*0.01);
+  vec3 col = alb*L + emis;
+  if (uKind > 4.5) { // polished bronze: a hot line of lamplight along the frame
+    vec3 V = normalize(vCamL - vLocal); vec3 Lv = uLamp - vLocal; float d2 = dot(Lv,Lv); vec3 l = Lv*inversesqrt(d2);
+    float sp = pow(max(dot(reflect(-l, N), V), 0.0), 48.0);
+    float sp2 = pow(max(dot(reflect(-l, N), V), 0.0), 8.0);
+    col += lampCol()*uLampPower*(sp*3.2 + sp2*0.25)/(d2*0.6+0.12) * vec3(1.0,0.82,0.55);
+  }
+  if (uKind > 0.5 && uKind < 1.5) col *= 1.0 - uFloorFade;
+  // gold-leaf glints on halos when the dawn light passes
+  if (uGlint > 0.0) {
+    float lum = dot(alb, vec3(0.33));
+    float tw = 0.5+0.5*sin(uTime*3.0 + nz.a*40.0);
+    col += vec3(1.0,0.75,0.35)*smoothstep(0.35,0.75,lum)*tw*uGlint*0.25;
+  }
+  col *= pow(uTint, vec3(vBounce));
+  col *= exp(-vDist*uFog);
+  float rv = smoothstep(vBounce-1.0, vBounce, uMirrorReveal);
+  col *= rv;
+  gl_FragColor = vec4(finish(col), 1.0);
+}`, 'vLampD');
+
+// ---------------------------------------------------------------- glass overlay (dust + sheen)
+const GLASS_FS = lampInit(/* glsl */`
+${GLSL_COMMON}
+varying vec3 vLampD;
+uniform sampler2D uWipe; uniform vec4 uTile; uniform float uDust, uDissolve, uWallFade, uDoorMask;
+varying vec3 vLocal; varying vec3 vN; varying vec2 vUv; varying float vBounce; varying float vParity; varying float vDist;
+void main(){
+  float open = smoothstep(0.15, 0.6, uDissolve) * (1.0 - smoothstep(0.1, 0.7, uWallFade));
+  if (open <= 0.001) discard;
+  vec2 tuv = uTile.xy + vUv*uTile.zw;
+  float wiped = texture2D(uWipe, tuv).r;              // 1 = clean
+  vec4 nz = texture2D(uNoise, vUv*vec2(2.7,1.9) + vLocal.xz*0.1);
+  vec4 nz2 = texture2D(uNoise, vUv*vec2(13.0,9.0));
+  float dust = uDust * (0.55 + 0.6*nz.r) * (0.75+0.5*nz2.g);
+  dust *= (1.0 - wiped);
+  dust += uDust*0.25*smoothstep(0.25,0.0,vUv.y);      // settles at the bottom edge
+  vec3 N = normalize(vN);
+  vec3 L = lightAll(vLocal, N);
+  vec3 sand = vec3(0.50,0.40,0.29);
+  float a = clamp(dust, 0.0, 0.92) * open;
+  vec3 col = sand*(L*0.55 + 0.02);
+  // a faint sheen so clean glass still reads as glass
+  vec3 toL = uLamp - vLocal; float dl = length(toL);
+  vec3 sheen = vec3(1.0,0.78,0.5)*0.010/(dl*dl+0.4) * open;
+  gl_FragColor = vec4(finish(col)*a + finish(sheen), a);
+}`, 'vLampD');
+
+// ---------------------------------------------------------------- statue points
+const PTS_VS = lampInit(/* glsl */`
+${GLSL_COMMON}
+${HASH}
+attribute vec2 aNrm; attribute vec3 aCol;
+attribute vec3 iOffset; attribute vec3 iSign; attribute float iBounce;
+uniform vec3 uBBMin, uBBMax; uniform float uScale, uRot, uBaseY;
+uniform float uAppear, uWind, uGhost, uScatter, uStatueFade, uOwnLight, uLampsWave;
+uniform float uPxScale, uPointWorld, uLod, uSizeMul, uNear;
+uniform float uMirrorRevealV;
+varying vec3 vCol; varying float vPs;
+vec3 octDecode(vec2 e){ vec3 n = vec3(e.x, 1.0-abs(e.x)-abs(e.y), e.y);
+  if (n.y < 0.0){ vec2 s = vec2(n.x>=0.?1.:-1., n.z>=0.?1.:-1.); n.xz = (1.0-abs(n.zx))*s; } return normalize(n); }
+mat2 rot(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }
+vec3 srgb2lin(vec3 c){ return mix(c/12.92, pow((c+0.055)/1.055, vec3(2.4)), step(0.04045,c)); }
+void main(){
+  uint id = uint(gl_VertexID);
+  float r1 = h1(id*3u+1u), r2 = h1(id*3u+2u), r3 = h1(id*7u+5u), r4 = h1(id*11u+9u);
+  vec3 p = mix(uBBMin, uBBMax, position) * uScale;
+  vec3 n = octDecode(aNrm);
+  // the scan faces +z: turn it to face the altar wall
+  p.xz = rot(uRot)*p.xz; n.xz = rot(uRot)*n.xz;
+  float hgt = p.y / ${ROOM.STATUE_H.toFixed(3)};
+  p.y += uBaseY;
+  vec3 base = p;
+  float vis = 1.0;
+  float bright = 1.0;
+  // appear: condense out of a cloud of sand
+  float ta = 1.0;
+  if (uAppear < 0.999) {
+    ta = clamp((uAppear - r1*0.55)/0.45, 0., 1.);
+    ta = 1.0 - pow(1.0-ta, 3.0);
+    vec3 dir = normalize(vec3(r2-0.5, r3-0.35, r4-0.5)+n*0.4);
+    vec3 cloud = base + dir*(0.5 + r2*2.4) + vec3(0., 0.4*r3, 0.);
+    p = mix(cloud, base, ta);
+    vis *= smoothstep(0.0, 0.12, ta);
+    bright *= 0.35 + 0.65*ta;
+  }
+  // wind: carried out through the east door like sand
+  bool ghost = r4 < 0.025;
+  float tw = 0.0;
+  if (uWind > 0.0) {
+    tw = ghost ? 0.0 : clamp((uWind - (1.0-hgt)*0.40 - r1*0.40)/0.30, 0., 1.);
+    if (tw > 0.0) {
+      vec3 p1 = vec3(HX, 0.6 + r2*1.3, (r3-0.5)*0.9);
+      vec3 p2 = vec3(HX + 5.5, 0.4 + r2*1.8, (r3-0.5)*1.4);
+      vec3 a = mix(p, p1, tw), b = mix(p1, p2, tw);
+      vec3 q = mix(a, b, tw);
+      q += vec3(0., sin(tw*9.0 + r1*30.0)*0.12, cos(tw*7.0+r2*20.0)*0.15)*tw*(1.0-tw)*4.0;
+      p = q;
+      vis *= 1.0 - smoothstep(0.82, 1.0, tw);
+    }
+    if (ghost) bright *= mix(1.0, 0.45, uGhost);
+  }
+  // scatter: every copy swirls into a disc of sand, then gathers again
+  float ts = 0.0;
+  if (uScatter > 0.0) {
+    ts = clamp(uScatter*1.35 - r1*0.30 - iBounce*0.035, 0., 1.);
+    ts = ts*ts*(3.0-2.0*ts);
+    if (ts > 0.0) {
+      vec2 rad = p.xz; float rr = length(rad);
+      float ang = ts*(1.2 + 1.8/(rr+0.22)) + uTime*0.06*ts;
+      vec2 dirr = rr > 1e-4 ? rad/rr : vec2(1.,0.);
+      float rnew = rr + ts*(0.25 + r2*r2*1.9);
+      vec2 np = rot(ang)*(dirr*rnew);
+      float ny = mix(p.y, 0.95 + (p.y-0.75)*0.25 + (r3-0.5)*0.55, ts);
+      p = vec3(np.x, ny + sin(uTime*0.7 + r1*40.)*0.02*ts, np.y);
+    }
+  }
+  vis *= 1.0 - uStatueFade;
+  // cull points whose surface faces away (only while the figure is whole)
+  if (ta > 0.999 && tw <= 0.0 && ts <= 0.0) {
+    vec3 camL = (cameraPosition - iOffset)*iSign;
+    if (dot(n, camL - p) < -0.02*length(camL - p)) vis = 0.0;
+  }
+  // lighting (room-local frame: identical in every reflected copy)
+  vec3 alb = srgb2lin(aCol);
+  vec3 L = uNear > 0.5 ? lightAll(p, n)*0.8 : (pointLight(p,n,uLamp,lampCol(),uLampPower,0.25) + vec3(0.55,0.62,0.75)*uAmbient);
+  // in the last chapter each copy is lit by its own altar lamp
+  if (uOwnLight > 0.0) {
+    float cellR = length(iOffset.xz)/(2.0*HX);
+    float lit = smoothstep(cellR - 0.6, cellR + 0.2, uLampsWave);
+    L += pointLight(p, n, vec3(-0.78, 0.30, 0.0), vec3(1.0,0.62,0.3), 0.55, 0.3)*uOwnLight*lit;
+    if (iBounce > 0.5) vis *= mix(1.0, lit, uOwnLight);
+  }
+  vec3 col = alb*L*bright;
+  // grains glint when scattered
+  col += vec3(1.0,0.72,0.4)*pow(r2, 40.0)*ts*1.5*min(uLampPower, 1.6);
+  vec3 world = p*iSign + iOffset;
+  vec4 mv = viewMatrix*vec4(world,1.);
+  float depth = max(-mv.z, 0.02);
+  col *= pow(uTint, vec3(iBounce));
+  col *= exp(-length(mv.xyz)*uFog);
+  col *= smoothstep(iBounce-1.0, iBounce, uMirrorReveal);
+  vCol = col;
+  gl_Position = projectionMatrix*mv;
+  float size = uPointWorld*sqrt(uLod)*uPxScale/depth*uSizeMul;
+  size = mix(size, size*0.75, ts);
+  gl_PointSize = clamp(size*vis, 1.0, 28.0); vPs = gl_PointSize;
+  if (vis < 0.02 || iBounce > uMirrorRevealV + 0.999) gl_Position = vec4(2.,2.,2.,1.);
+}`, 'lampFor(iBounce)');
+const PTS_FS = lampInit(/* glsl */`
+${GLSL_COMMON}
+varying vec3 vCol; varying float vPs;
+void main(){
+  if (vPs > 3.5) { vec2 c = gl_PointCoord*2.0-1.0; if (dot(c,c) > 1.0) discard; }
+  gl_FragColor = vec4(finish(vCol), 1.0);
+}`, 'uLampU');
+
+// ---------------------------------------------------------------- lamps (held lamp reflections + altar lamps)
+const LAMP_VS = /* glsl */`
+${LAMP_HIST}
+attribute vec3 iOffset; attribute vec3 iSign; attribute float iBounce;
+uniform vec3 uLampLocal; uniform float uSize; uniform float uMode; uniform float uLampsWave, uLampsOn, uTime, uMirrorReveal, uMirrorRevealV, uFog;
+uniform vec3 uTint; uniform float uVisible; uniform float uReflect; uniform float uPxScale; uniform float uMinPx;
+varying vec2 vQ; varying float vI; varying float vSeed;
+void main(){
+  vec3 local = uMode > 0.5 ? uLampLocal : lampFor(iBounce);
+  float inten = uVisible;
+  if (uMode > 0.5) { // altar lamps: lit by a wave travelling outwards from the centre cell
+    float cellR = length(iOffset.xz)/${(2 * ROOM.HX).toFixed(3)};
+    float lit = smoothstep(cellR - 0.35, cellR + 0.05, uLampsWave);
+    float flash = exp(-max(uLampsWave - cellR, 0.0)*5.0)*step(cellR, uLampsWave+0.05);
+    inten = uLampsOn*(lit*0.85 + flash*0.9);
+  } else {
+    inten *= smoothstep(iBounce-1.0, iBounce, uMirrorReveal);
+    if (iBounce > 0.5) inten *= uReflect;
+  }
+  vec3 world = local*iSign + iOffset;
+  vec4 mv = viewMatrix*vec4(world,1.);
+  float s = uSize*(0.92+0.08*sin(uTime*13.0+iBounce*1.7+iOffset.x));
+  s = max(s, uMinPx*max(-mv.z,0.05)/uPxScale);
+  mv.xy += position.xy*s;
+  vQ = position.xy; vSeed = iBounce;
+  vI = inten*exp(-length(mv.xyz)*uFog*0.6);
+  if (uMode < 0.5) vI *= pow(dot(uTint,vec3(0.3333)), iBounce);
+  gl_Position = projectionMatrix*mv;
+  if (inten < 0.002 || iBounce > uMirrorRevealV + 0.999) gl_Position = vec4(2.,2.,2.,1.);
+}`;
+const LAMP_FS = /* glsl */`
+uniform float uHalo; uniform float uTime;
+varying vec2 vQ; varying float vI; varying float vSeed;
+void main(){
+  vec2 q = vQ;
+  float r = length(q);
+  if (r > 1.0) discard;
+  // flame: a flickering teardrop above the wick
+  float fl = sin(uTime*9.0 + vSeed*3.1)*0.5 + sin(uTime*23.0 + vSeed)*0.25;
+  vec2 f = q - vec2(fl*0.012*(q.y+0.2), -0.12);
+  float yy = (f.y + 0.02)/0.30;                  // 0 at base, 1 at tip
+  float w = 0.085*pow(clamp(1.0 - yy, 0.0, 1.0), 0.65)*smoothstep(-0.35, 0.05, yy);
+  float body = smoothstep(w, w*0.35, abs(f.x)) * smoothstep(-0.12, 0.0, yy) * smoothstep(1.05, 0.7, yy);
+  float core = smoothstep(w*0.55, 0.0, abs(f.x)) * smoothstep(-0.05, 0.08, yy) * smoothstep(0.55, 0.15, yy);
+  float blue = smoothstep(0.04, 0.0, abs(f.x)) * smoothstep(-0.10, -0.02, yy) * smoothstep(0.06, -0.02, yy);
+  float halo = (exp(-r*r*7.0)*0.32 + exp(-r*3.5)*0.10)*uHalo;
+  vec3 col = vec3(1.0,0.55,0.16)*body*1.4 + vec3(1.0,0.92,0.72)*core*2.2 + vec3(0.25,0.35,0.9)*blue*0.5 + vec3(1.0,0.56,0.2)*halo;
+  gl_FragColor = vec4(col*vI, 1.0);
+}`;
+
+// ---------------------------------------------------------------- falling sand
+const SAND_VS = lampInit(/* glsl */`
+${GLSL_COMMON}
+${HASH}
+attribute vec3 iOffset; attribute vec3 iSign; attribute float iBounce;
+uniform float uSand, uPxScale, uMirrorRevealV;
+varying vec3 vCol;
+void main(){
+  uint id = uint(gl_VertexID);
+  float a = h1(id*5u+1u), b = h1(id*5u+2u), c = h1(id*5u+3u), d = h1(id*5u+4u);
+  float speed = 0.06 + d*0.10;
+  float H = 3.6;
+  float y = H - mod(uTime*speed + a*H, H);
+  vec3 p = vec3((b*2.0-1.0)*HX*0.98 + sin(uTime*0.3+a*20.)*0.05, y, (c*2.0-1.0)*HZ*0.98 + cos(uTime*0.27+b*17.)*0.05);
+  vec3 world = p*iSign + iOffset;
+  vec4 mv = viewMatrix*vec4(world,1.);
+  vec3 L = p - uLamp; float dl = dot(L,L);
+  float beam = smoothstep(0.6, 0.0, abs(p.z + (p.x-HX)*0.05)) * smoothstep(0.0, 0.8, p.y) * smoothstep(2.2, 1.0, p.y) * smoothstep(-HX, HX, p.x);
+  float lit = uLampPower*0.10/(dl+0.05) + (uDoorLight*0.25 + uGold*0.9)*beam + uDoorLight*0.02;
+  float on = step(a, uSand);
+  vec3 col = vec3(1.0,0.75,0.45)*lit*on*(0.4+0.6*d);
+  col *= pow(uTint, vec3(iBounce))*exp(-length(mv.xyz)*uFog);
+  col *= smoothstep(iBounce-1.0, iBounce, uMirrorReveal);
+  vCol = col;
+  gl_Position = projectionMatrix*mv;
+  gl_PointSize = clamp(0.0035*uPxScale/max(-mv.z,0.05), 1.0, 6.0);
+  if (on < 0.5 || iBounce > uMirrorRevealV + 0.999) gl_Position = vec4(2.,2.,2.,1.);
+}`, 'lampFor(iBounce)');
+
+
+// ---------------------------------------------------------------- golden motes: light lifting off the painted halos
+const MOTE_VS = lampInit(/* glsl */`
+${GLSL_COMMON}
+${HASH}
+attribute vec3 aNrm3; attribute vec2 aUv; attribute float aWall;
+uniform sampler2D uQf, uWest, uSouth; uniform float uVision, uPxScale, uGather; uniform vec3 uGatherPt;
+varying vec3 vCol; varying float vA;
+void main(){
+  uint id = uint(gl_VertexID);
+  float r1 = h1(id*3u+1u), r2 = h1(id*3u+2u), r3 = h1(id*5u+7u);
+  vec3 m = aWall < 0.5 ? texture2D(uQf, aUv).rgb : (aWall < 1.5 ? texture2D(uWest, aUv).rgb : texture2D(uSouth, aUv).rgb);
+  float lum = dot(m, vec3(0.2126,0.7152,0.0722));
+  float k = smoothstep(0.22, 0.55, lum);
+  float v = clamp(uVision*1.25 - r1*0.25, 0.0, 1.0);
+  vec3 p = position + aNrm3*(0.006 + 0.16*r2*r2)*v + vec3(0.0, 0.10*r3*v*v, 0.0);
+  p += vec3(sin(uTime*0.9 + r1*40.0), sin(uTime*0.7 + r2*30.0), cos(uTime*0.8 + r3*50.0))*0.006*v;
+  // gather: held down, the light lifts off the walls and spirals in to where the figure will kneel
+  float gg = clamp(uGather*1.6 - r1*0.6, 0.0, 1.0); gg = gg*gg*(3.0-2.0*gg);
+  if (gg > 0.0) {
+    vec3 tgt = uGatherPt + vec3((r2-0.5)*0.55, (r3-0.25)*1.15, (r1-0.5)*0.5)*(0.30 + 0.70*(1.0-gg));
+    vec3 q = mix(p, tgt, gg);
+    float sw = (1.0-gg)*gg*4.0;
+    vec2 off = q.xz - uGatherPt.xz;
+    float an = sw*1.6*(0.6+r2);
+    q.xz = uGatherPt.xz + mat2(cos(an), -sin(an), sin(an), cos(an))*off;
+    q.y += sin(uTime*1.7 + r3*20.0)*0.03*sw;
+    p = q;
+  }
+  vec4 mv = viewMatrix*vec4(p,1.);
+  float tw = 0.6 + 0.4*sin(uTime*(2.0+r2*3.0) + r1*60.0);
+  vCol = vec3(1.0,0.68,0.30)*k*v*tw*(0.6+0.8*r3)*3.2*(1.0 - 0.72*gg);
+  vA = k*v;
+  gl_Position = projectionMatrix*mv;
+  gl_PointSize = clamp(0.010*uPxScale/max(-mv.z,0.05)*(1.0 - 0.55*gg), 1.5, 10.0);
+  if (vA < 0.01) gl_Position = vec4(2.,2.,2.,1.);
+}`, 'uLampU');
+const MOTE_FS = lampInit(/* glsl */`
+${GLSL_COMMON}
+varying vec3 vCol; varying float vA;
+void main(){ vec2 c = gl_PointCoord*2.0-1.0; float a = max(0.0, 1.0-dot(c,c)); gl_FragColor = vec4(finish(vCol)*a*a, 1.0); }`, 'uLampU');
+
+// ---------------------------------------------------------------- falling petals (the heavenly flower rain)
+// simulated by the app in the room-local frame; drawn in every reflected copy, lit by that copy's lamp
+const PETAL_VS = lampInit(/* glsl */`
+${GLSL_COMMON}
+attribute vec2 aCorner; attribute vec4 aP; attribute vec4 aQ;
+attribute vec3 iOffset; attribute vec3 iSign; attribute float iBounce;
+uniform float uMirrorRevealV;
+varying vec2 vQ; varying vec3 vCol; varying float vA;
+void main(){
+  vec3 local = aP.xyz;
+  vec3 world = local*iSign + iOffset;
+  vec4 mv = viewMatrix*vec4(world,1.);
+  vec2 c = aCorner;
+  c.x *= 0.62*max(0.18, abs(cos(aQ.x)));
+  float sp = aP.w;
+  c = mat2(cos(sp), -sin(sp), sin(sp), cos(sp))*c;
+  mv.xy += c*aQ.y;
+  float h = aQ.z;
+  vec3 base = h < 0.3 ? vec3(0.74,0.15,0.09) : (h < 0.55 ? vec3(0.80,0.38,0.36) : (h < 0.8 ? vec3(0.72,0.62,0.50) : vec3(0.80,0.54,0.17)));
+  vec3 Lv = uLamp - local; float d2 = dot(Lv,Lv);
+  float face = 0.55 + 0.45*abs(sin(aQ.x));
+  vec3 lit = base*(min(lampCol()*uLampPower*face/(d2+0.12), vec3(1.15)) + vec3(0.55,0.62,0.75)*uAmbient*4.0 + 0.004);
+  lit *= pow(uTint, vec3(iBounce))*exp(-length(mv.xyz)*uFog);
+  vCol = lit; vA = aQ.w*smoothstep(iBounce-1.0, iBounce, uMirrorReveal)*smoothstep(0.22, 0.5, length(mv.xyz)); vQ = aCorner;
+  gl_Position = projectionMatrix*mv;
+  if (vA < 0.003 || iBounce > uMirrorRevealV + 0.999) gl_Position = vec4(2.,2.,2.,1.);
+}`, 'lampFor(iBounce)');
+const PETAL_FS = lampInit(/* glsl */`
+${GLSL_COMMON}
+varying vec2 vQ; varying vec3 vCol; varying float vA;
+void main(){
+  float y = vQ.y*0.5 + 0.5;
+  float w = pow(sin(3.14159*clamp(y*0.92 + 0.04, 0.0, 1.0)), 0.8)*(1.0 - 0.35*y);
+  float e = abs(vQ.x) - w;
+  float a = smoothstep(0.06, -0.04, e)*smoothstep(0.0, 0.05, y)*smoothstep(1.0, 0.94, y);
+  if (a < 0.01) discard;
+  float vein = 1.0 - 0.18*smoothstep(0.05, 0.0, abs(vQ.x))*y;
+  vec3 c = vCol*vein*(0.85 + 0.3*y);
+  float al = a*vA;
+  gl_FragColor = vec4(finish(c)*al, al);
+}`, 'uLampU');
+
+// ---------------------------------------------------------------- daylight shaft through the door + exterior
+const SHAFT_VS = /* glsl */`
+varying vec3 vP; varying vec2 vUv;
+void main(){ vP = position; vUv = uv; gl_Position = projectionMatrix*viewMatrix*vec4(position,1.); }`;
+const SHAFT_FS = lampInit(/* glsl */`
+${GLSL_COMMON}
+varying vec3 vP; varying vec2 vUv;
+uniform float uStrength;
+void main(){
+  float a = smoothstep(0.0,0.25,vUv.x)*smoothstep(1.0,0.55,vUv.x);
+  float side = smoothstep(0.0,0.35,vUv.y)*smoothstep(1.0,0.65,vUv.y);
+  vec4 nz = texture2D(uNoise, vec2(vUv.x*0.6 - uTime*0.01, vUv.y*0.8));
+  vec3 col = mix(vec3(1.0,0.85,0.62), vec3(1.0,0.62,0.2), clamp(uGold,0.,1.)) * a*side*(0.6+0.6*nz.r)*uStrength*0.09;
+  gl_FragColor = vec4(finish(col)*1.0, 1.0);
+}`, 'uLampU');
+
+function noiseTexture(THREE, size = 256) {
+  // tileable value-noise fbm in 4 channels (different frequencies/seeds)
+  const data = new Uint8Array(size * size * 4);
+  const rnd = (s) => { let x = Math.sin(s * 12.9898) * 43758.5453; return x - Math.floor(x); };
+  const lattice = (freq, seed) => {
+    const g = new Float32Array(freq * freq);
+    for (let i = 0; i < g.length; i++) g[i] = rnd(i * 1.37 + seed * 91.7);
+    return g;
+  };
+  const chans = [
+    [[4, 0.5], [8, 0.25], [16, 0.15], [32, 0.1]],
+    [[6, 0.45], [12, 0.3], [24, 0.15], [48, 0.1]],
+    [[16, 0.5], [32, 0.3], [64, 0.2]],
+    [[3, 0.55], [9, 0.25], [27, 0.12], [81, 0.08]],
+  ];
+  const fade = (t) => t * t * (3 - 2 * t);
+  for (let c = 0; c < 4; c++) {
+    const layers = chans[c].map(([f, w], k) => ({ f, w, g: lattice(f, c * 10 + k) }));
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      let v = 0;
+      for (const { f, w, g } of layers) {
+        const fx = x / size * f, fy = y / size * f;
+        const x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fade(fx - x0), ty = fade(fy - y0);
+        const i00 = g[(y0 % f) * f + (x0 % f)], i10 = g[(y0 % f) * f + ((x0 + 1) % f)];
+        const i01 = g[((y0 + 1) % f) * f + (x0 % f)], i11 = g[((y0 + 1) % f) * f + ((x0 + 1) % f)];
+        v += w * ((i00 * (1 - tx) + i10 * tx) * (1 - ty) + (i01 * (1 - tx) + i11 * tx) * ty);
+      }
+      data[(y * size + x) * 4 + c] = Math.max(0, Math.min(255, Math.round(v * 255)));
+    }
+  }
+  const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
+  return t;
+}
+
+// ---------------------------------------------------------------- geometry helpers
+function quadBuilder() {
+  const pos = [], nrm = [], uv = [], idx = [];
+  return {
+    quad(p0, p1, p2, p3, n, uv0, uv1, uv2, uv3) {
+      const b = pos.length / 3;
+      for (const p of [p0, p1, p2, p3]) pos.push(...p);
+      for (let i = 0; i < 4; i++) nrm.push(...n);
+      uv.push(...uv0, ...uv1, ...uv2, ...uv3);
+      idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+    },
+    build(THREE) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      g.setIndex(idx);
+      return g;
+    },
+    empty() { return pos.length === 0; },
+  };
+}
+const R = ROOM;
+// wall frames: origin at wall centre on the floor, right vector (s axis), inward normal
+const WALLS = {
+  W: { o: [-R.HX, 0, 0], r: [0, 0, -1], n: [1, 0, 0] },
+  E: { o: [R.HX, 0, 0], r: [0, 0, 1], n: [-1, 0, 0] },
+  N: { o: [0, 0, -R.HZ], r: [1, 0, 0], n: [0, 0, 1] },
+  S: { o: [0, 0, R.HZ], r: [-1, 0, 0], n: [0, 0, -1] },
+};
+const WALL_ORDER = ['N', 'E', 'S', 'W']; // running length around the room for continuous bands
+function wallPt(w, s, y, inset = 0) {
+  const W = WALLS[w];
+  return [W.o[0] + W.r[0] * s + W.n[0] * inset, y, W.o[2] + W.r[2] * s + W.n[2] * inset];
+}
+function wallRect(qb, w, s0, s1, y0, y1, uvf, inset = 0) {
+  const W = WALLS[w];
+  qb.quad(wallPt(w, s0, y0, inset), wallPt(w, s1, y0, inset), wallPt(w, s1, y1, inset), wallPt(w, s0, y1, inset), W.n,
+    uvf(s0, y0), uvf(s1, y0), uvf(s1, y1), uvf(s0, y1));
+}
+
+function buildRoomGeometries(THREE) {
+  const g = {};
+  const HX = R.HX;
+  const pS0 = -HX + R.MARGIN, pS1 = HX - R.MARGIN;
+  // ---- mural panels (become mirrors)
+  const unit = (s0, s1, y0, y1) => (s, y) => [(s - s0) / (s1 - s0), (y - y0) / (y1 - y0)];
+  const metres = (s, y) => [s, y];
+  let q;
+  q = quadBuilder(); wallRect(q, 'W', pS0, pS1, R.DADO, R.PANEL_TOP, unit(pS0, pS1, R.DADO, R.PANEL_TOP)); g.panelW = q.build(THREE);
+  q = quadBuilder(); wallRect(q, 'N', pS0, pS1, R.DADO, R.PANEL_TOP, unit(pS0, pS1, R.DADO, R.PANEL_TOP)); g.panelN = q.build(THREE);
+  q = quadBuilder(); wallRect(q, 'S', pS0, pS1, R.DADO, R.PANEL_TOP, unit(pS0, pS1, R.DADO, R.PANEL_TOP)); g.panelS = q.build(THREE);
+  const eL1 = -R.DOOR_HALF - R.JAMB, eR0 = R.DOOR_HALF + R.JAMB;
+  q = quadBuilder(); wallRect(q, 'E', pS0, eL1, R.DADO, R.PANEL_TOP, unit(pS0, eL1, R.DADO, R.PANEL_TOP)); g.panelEL = q.build(THREE);
+  q = quadBuilder(); wallRect(q, 'E', eR0, pS1, R.DADO, R.PANEL_TOP, unit(eR0, pS1, R.DADO, R.PANEL_TOP)); g.panelER = q.build(THREE);
+  q = quadBuilder(); wallRect(q, 'E', -R.DOOR_HALF, R.DOOR_HALF, 0, R.DOOR_H, unit(-R.DOOR_HALF, R.DOOR_HALF, 0, R.DOOR_H)); g.door = q.build(THREE);
+  // glass overlays: same rects slightly inside; uv over the mirror region of each wall (for the wipe tiles)
+  const glass = quadBuilder();
+  const gIn = 0.004;
+  const mirrorUv = (w) => (s, y) => [(s + HX) / (2 * HX), (y - (w === 'E' ? 0 : R.DADO)) / (R.PANEL_TOP - (w === 'E' ? 0 : R.DADO))];
+  g.glassParts = {};
+  for (const w of ['W', 'N', 'S']) { const qq = quadBuilder(); wallRect(qq, w, pS0, pS1, R.DADO, R.PANEL_TOP, mirrorUv(w), gIn); g.glassParts[w] = qq.build(THREE); }
+  {
+    const qq = quadBuilder();
+    wallRect(qq, 'E', pS0, eL1, R.DADO, R.PANEL_TOP, mirrorUv('E'), gIn);
+    wallRect(qq, 'E', eR0, pS1, R.DADO, R.PANEL_TOP, mirrorUv('E'), gIn);
+    wallRect(qq, 'E', -R.DOOR_HALF, R.DOOR_HALF, 0, R.DOOR_H, mirrorUv('E'), gIn);
+    g.glassParts.E = qq.build(THREE);
+  }
+  // ---- bronze mirror frames: a front strip + an inner bevel, u runs along the perimeter (for the tracing reveal)
+  const fr = quadBuilder();
+  const FW = 0.038, FD = 0.016;
+  const P3 = (w, s, y, inset) => wallPt(w, s, y, inset);
+  const strip = (w, a0, a1, b0, b1, along, u0, u1) => {
+    // along='s': strip spans s in [a0,a1], y in [b0,b1]; along='y': y in [a0,a1], s in [b0,b1]; always wound to face the room
+    const W = WALLS[w];
+    const sA = along === 's' ? [a0, a1] : [b0, b1], yA = along === 's' ? [b0, b1] : [a0, a1];
+    const s0_ = Math.min(...sA), s1_ = Math.max(...sA), y0_ = Math.min(...yA), y1_ = Math.max(...yA);
+    const uAt = (sv, yv) => u0 + (u1 - u0) * (along === 's' ? (sv - a0) / (a1 - a0) : (yv - a0) / (a1 - a0));
+    const vAt = (sv, yv) => (along === 's' ? (yv - y0_) / (y1_ - y0_) : (sv - s0_) / (s1_ - s0_));
+    const c = [[s0_, y0_], [s1_, y0_], [s1_, y1_], [s0_, y1_]];
+    fr.quad(...c.map(([sv, yv]) => P3(w, sv, yv, FD)), W.n, ...c.map(([sv, yv]) => [uAt(sv, yv), vAt(sv, yv)]));
+  };
+  const bevel = (w, pa, pb, inwardDir, u0, u1) => {
+    // pa,pb: [s,y] along the mirror edge; bevel from the frame's inner edge (inset FD) down to the glass (inset 0)
+    const W = WALLS[w];
+    const a = P3(w, pa[0], pa[1], FD), b = P3(w, pb[0], pb[1], FD);
+    const c = P3(w, pb[0] + inwardDir[0] * 0.006, pb[1] + inwardDir[1] * 0.006, 0.0), d = P3(w, pa[0] + inwardDir[0] * 0.006, pa[1] + inwardDir[1] * 0.006, 0.0);
+    const dirW = [W.r[0] * inwardDir[0], inwardDir[1], W.r[2] * inwardDir[0]];
+    const n = [W.n[0] * 0.75 + dirW[0] * 0.66, dirW[1] * 0.66, W.n[2] * 0.75 + dirW[2] * 0.66];
+    const l = Math.hypot(...n);
+    // winding must face the room: test with cross product and flip if needed
+    const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
+    const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    const nn = n.map((v) => v / l);
+    if (cr[0] * nn[0] + cr[1] * nn[1] + cr[2] * nn[2] >= 0) fr.quad(a, b, c, d, nn, [u0, 0], [u1, 0], [u1, 1], [u0, 1]);
+    else fr.quad(b, a, d, c, nn, [u1, 0], [u0, 0], [u0, 1], [u1, 1]);
+  };
+  const frameRect = (w, s0, s1, y0, y1, sides = 'brtl') => {
+    const Wd = s1 - s0, Ht = y1 - y0; const P = (sides.includes('b') ? Wd : 0) + (sides.includes('t') ? Wd : 0) + (sides.includes('r') ? Ht : 0) + (sides.includes('l') ? Ht : 0);
+    let acc = 0; const seg = (len) => { const a = acc / P, b = (acc + len) / P; acc += len; return [a, b]; };
+    for (const sd of sides) {
+      if (sd === 'b') { const [a, b] = seg(Wd); strip(w, s0 - FW, s1 + FW, y0 - FW, y0, 's', a, b); bevel(w, [s0, y0], [s1, y0], [0, 1], a, b); }
+      if (sd === 'r') { const [a, b] = seg(Ht); strip(w, y0, y1, s1, s1 + FW, 'y', a, b); bevel(w, [s1, y0], [s1, y1], [-1, 0], a, b); }
+      if (sd === 't') { const [a, b] = seg(Wd); strip(w, s1 + FW, s0 - FW, y1, y1 + FW, 's', a, b); bevel(w, [s1, y1], [s0, y1], [0, -1], a, b); }
+      if (sd === 'l') { const [a, b] = seg(Ht); strip(w, y1, y0, s0 - FW, s0, 'y', a, b); bevel(w, [s0, y1], [s0, y0], [1, 0], a, b); }
+    }
+  };
+  for (const w of ['W', 'N', 'S']) frameRect(w, pS0, pS1, R.DADO, R.PANEL_TOP);
+  frameRect('E', pS0, eL1, R.DADO, R.PANEL_TOP);
+  frameRect('E', eR0, pS1, R.DADO, R.PANEL_TOP);
+  frameRect('E', -R.DOOR_HALF, R.DOOR_HALF, 0.0, R.DOOR_H, 'ltr');
+  g.frames = fr.build(THREE);
+  // ---- thousand-Buddha bands: pilasters, jambs, lintel (metres uv) + ceiling slopes
+  const qf = quadBuilder();
+  for (const w of WALL_ORDER) {
+    wallRect(qf, w, -HX, pS0, R.DADO, R.PANEL_TOP, metres);
+    wallRect(qf, w, pS1, HX, R.DADO, R.PANEL_TOP, metres);
+  }
+  wallRect(qf, 'E', eL1, -R.DOOR_HALF, R.DADO, R.PANEL_TOP, metres);
+  wallRect(qf, 'E', R.DOOR_HALF, eR0, R.DADO, R.PANEL_TOP, metres);
+  wallRect(qf, 'E', -R.DOOR_HALF, R.DOOR_HALF, R.DOOR_H, R.PANEL_TOP, metres);
+  g.qfBands = qf.build(THREE);
+  // ceiling slopes (truncated pyramid): rows of Buddhas run parallel to each wall
+  const cs = quadBuilder();
+  const yb = R.WALL_H, yt = R.CEIL_TOP, ch = R.CAIS_HALF;
+  const slopeLen = Math.hypot(HX - ch, yt - yb);
+  for (const w of WALL_ORDER) {
+    const W = WALLS[w];
+    const P = (s, inset, y) => [W.o[0] + W.r[0] * s + W.n[0] * inset, y, W.o[2] + W.r[2] * s + W.n[2] * inset];
+    const a = P(-HX, 0, yb), b = P(HX, 0, yb), c = P(ch, HX - ch, yt), d = P(-ch, HX - ch, yt);
+    const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
+    let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    const l = Math.hypot(...n); n = n.map((v) => v / l);
+    cs.quad(a, b, c, d, n, [-HX, 0], [HX, 0], [ch, slopeLen], [-ch, slopeLen]);
+  }
+  g.ceil = cs.build(THREE);
+  // caisson recess: sides (fringe) + top (caisson)
+  const cside = quadBuilder();
+  const ct = yt + R.CAIS_DEPTH;
+  for (const w of WALL_ORDER) {
+    const W = WALLS[w];
+    const P = (s, y) => [W.n[0] * -ch + W.r[0] * s, y, W.n[2] * -ch + W.r[2] * s];
+    cside.quad(P(-ch, yt), P(ch, yt), P(ch, ct), P(-ch, ct), W.n, [0, 1], [1.3, 1], [1.3, 0.0], [0, 0.0]);
+  }
+  g.caisSide = cside.build(THREE);
+  const ctop = quadBuilder();
+  ctop.quad([-ch, ct, -ch], [ch, ct, -ch], [ch, ct, ch], [-ch, ct, ch], [0, -1, 0], [0, 1], [1, 1], [1, 0], [0, 0]);
+  g.caisTop = ctop.build(THREE);
+  // ---- dado + frieze bands, continuous around the room
+  const dado = quadBuilder(), frieze = quadBuilder();
+  let run = 0;
+  for (const w of WALL_ORDER) {
+    const uvRun = (s, y) => [run + s + HX, y];
+    if (w === 'E') {
+      wallRect(dado, w, -HX, -R.DOOR_HALF, 0, R.DADO, uvRun);
+      wallRect(dado, w, R.DOOR_HALF, HX, 0, R.DADO, uvRun);
+    } else wallRect(dado, w, -HX, HX, 0, R.DADO, uvRun);
+    wallRect(frieze, w, -HX, HX, R.PANEL_TOP, R.WALL_H, uvRun);
+    run += 2 * HX;
+  }
+  g.dado = dado.build(THREE); g.frieze = frieze.build(THREE);
+  // ---- floor + altar platform
+  const fl = quadBuilder();
+  fl.quad([-HX, 0, HX], [HX, 0, HX], [HX, 0, -HX], [-HX, 0, -HX], [0, 1, 0], [0, 0], [1, 0], [1, 1], [0, 1]);
+  g.floor = fl.build(THREE);
+  const al = quadBuilder(); const ah = R.ALTAR_HALF, aH = R.ALTAR_H;
+  al.quad([-ah, aH, ah], [ah, aH, ah], [ah, aH, -ah], [-ah, aH, -ah], [0, 1, 0], [0, 0], [1, 0], [1, 1], [0, 1]);
+  const sides = [[[ah, 0, ah], [ah, 0, -ah], [1, 0, 0]], [[ah, 0, -ah], [-ah, 0, -ah], [0, 0, -1]], [[-ah, 0, -ah], [-ah, 0, ah], [-1, 0, 0]], [[-ah, 0, ah], [ah, 0, ah], [0, 0, 1]]];
+  for (const [p0, p1, n] of sides) al.quad(p0, p1, [p1[0], aH, p1[2]], [p0[0], aH, p0[2]], n, [0, 0], [1, 0], [1, 1], [0, 1]);
+  g.altar = al.build(THREE);
+  // ---- corridor (real room only): dado + Wutai panorama + thousand Buddhas
+  const cw = quadBuilder(), cq = quadBuilder(), cc = quadBuilder(), cp = quadBuilder(), cd = quadBuilder();
+  const x0 = HX, x1 = HX + R.CORR_LEN, zh = R.CORR_HALF, hc = R.CORR_H;
+  const wy0 = 0.50, wy1 = 0.50 + (x1 - x0 - 0.2) / 3.56, qy0 = wy1 + 0.08;
+  // north corridor wall (faces +z)
+  cw.quad([x0 + 0.1, wy0, -zh], [x1 - 0.1, wy0, -zh], [x1 - 0.1, wy1, -zh], [x0 + 0.1, wy1, -zh], [0, 0, 1], [0, 0], [1, 0], [1, 1], [0, 1]);
+  g.corrWutai = cw.build(THREE);
+  cq.quad([x0, qy0, -zh], [x1, qy0, -zh], [x1, hc, -zh], [x0, hc, -zh], [0, 0, 1], [x0, qy0], [x1, qy0], [x1, hc], [x0, hc]);
+  // south corridor wall (faces -z)
+  cq.quad([x1, R.DADO, zh], [x0, R.DADO, zh], [x0, hc, zh], [x1, hc, zh], [0, 0, -1], [x1 + 0.4, R.DADO], [x0 + 0.4, R.DADO], [x0 + 0.4, hc], [x1 + 0.4, hc]);
+  g.corrQf = cq.build(THREE);
+  cd.quad([x0, 0, -zh], [x1, 0, -zh], [x1, R.DADO, -zh], [x0, R.DADO, -zh], [0, 0, 1], [x0, 0], [x1, 0], [x1, R.DADO], [x0, R.DADO]);
+  cd.quad([x1, 0, zh], [x0, 0, zh], [x0, R.DADO, zh], [x1, R.DADO, zh], [0, 0, -1], [x1 + 2, 0], [x0 + 2, 0], [x0 + 2, R.DADO], [x1 + 2, R.DADO]);
+  g.corrDado = cd.build(THREE);
+  // corridor ceiling: Cave 329 rider
+  cc.quad([x0, hc, -zh], [x1, hc, -zh], [x1, hc, zh], [x0, hc, zh], [0, -1, 0], [0, 0], [1, 0], [1, 1], [0, 1]);
+  g.corrCeil = cc.build(THREE);
+  // plaster: floor and the thin borders around the panorama
+  cp.quad([x0, 0, zh], [x1, 0, zh], [x1, 0, -zh], [x0, 0, -zh], [0, 1, 0], [0, 0], [1, 0], [1, 1], [0, 1]);
+  cp.quad([x0, R.DADO, -zh], [x1, R.DADO, -zh], [x1, wy0, -zh], [x0, wy0, -zh], [0, 0, 1], [0, 0], [1, 0], [1, 1], [0, 1]);
+  cp.quad([x0, wy1, -zh], [x1, wy1, -zh], [x1, qy0, -zh], [x0, qy0, -zh], [0, 0, 1], [0, 0], [1, 0], [1, 1], [0, 1]);
+  cp.quad([x0, wy0, -zh + 0.0005], [x0 + 0.1, wy0, -zh + 0.0005], [x0 + 0.1, wy1, -zh + 0.0005], [x0, wy1, -zh + 0.0005], [0, 0, 1], [0, 0], [1, 0], [1, 1], [0, 1]);
+  cp.quad([x1 - 0.1, wy0, -zh + 0.0005], [x1, wy0, -zh + 0.0005], [x1, wy1, -zh + 0.0005], [x1 - 0.1, wy1, -zh + 0.0005], [0, 0, 1], [0, 0], [1, 0], [1, 1], [0, 1]);
+  g.corrPlaster = cp.build(THREE);
+  // exterior daylight opening
+  const ex = quadBuilder();
+  ex.quad([x1 + 0.02, -0.2, -zh - 0.4], [x1 + 0.02, -0.2, zh + 0.4], [x1 + 0.02, hc + 0.5, zh + 0.4], [x1 + 0.02, hc + 0.5, -zh - 0.4], [-1, 0, 0], [0, 0], [1, 0], [1, 1], [0, 1]);
+  g.exterior = ex.build(THREE);
+  // light shaft volume: two crossed planes from door towards the altar wall
+  const sh = quadBuilder();
+  const sx0 = HX + 0.4, sx1 = -HX + 0.2;
+  sh.quad([sx0, 1.9, 0], [sx1, 1.1, 0], [sx1, 0.0, 0], [sx0, 0.25, 0], [0, 0, 1], [0, 1], [1, 1], [1, 0], [0, 0]);
+  sh.quad([sx0, 1.1, -0.5], [sx1, 0.6, -0.9], [sx1, 0.6, 0.9], [sx0, 1.1, 0.5], [0, 1, 0], [0, 0], [1, 0], [1, 1], [0, 1]);
+  g.shaft = sh.build(THREE);
+  return g;
+}
+
+// ---------------------------------------------------------------- lattice of reflected cells
+function latticeCells(N) {
+  const cells = [];
+  for (let i = -N; i <= N; i++) for (let j = -N; j <= N; j++) {
+    const ring = Math.max(Math.abs(i), Math.abs(j));
+    cells.push({ i, j, ring, bounce: Math.abs(i) + Math.abs(j) });
+  }
+  cells.sort((a, b) => a.bounce - b.bounce || a.ring - b.ring);
+  return cells;
+}
+function cellAttrs(THREE, cells) {
+  const off = new Float32Array(cells.length * 3), sgn = new Float32Array(cells.length * 3), bnc = new Float32Array(cells.length);
+  cells.forEach((c, k) => {
+    off.set([c.i * 2 * R.HX, 0, c.j * 2 * R.HZ], k * 3);
+    sgn.set([c.i % 2 ? -1 : 1, 1, c.j % 2 ? -1 : 1], k * 3);
+    bnc[k] = c.bounce;
+  });
+  return {
+    iOffset: new THREE.InstancedBufferAttribute(off, 3),
+    iSign: new THREE.InstancedBufferAttribute(sgn, 3),
+    iBounce: new THREE.InstancedBufferAttribute(bnc, 1),
+  };
+}
+function instanced(THREE, geom, attrs, count) {
+  const ig = new THREE.InstancedBufferGeometry();
+  ig.index = geom.index;
+  for (const k of Object.keys(geom.attributes)) ig.setAttribute(k, geom.attributes[k]);
+  for (const k of Object.keys(attrs)) ig.setAttribute(k, attrs[k]);
+  ig.instanceCount = count;
+  return ig;
+}
+
+
+// ---------------------------------------------------------------- HDR post: bloom, light shafts, grade, vignette, grain
+function makePost(THREE, renderer, opts) {
+  const ok = renderer.capabilities.isWebGL2 && renderer.extensions.has('EXT_color_buffer_float');
+  if (!ok || opts.post === false) return null;
+  const mk = (o = {}) => new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, ...o });
+  const rt = { scene: mk({ depthBuffer: true, samples: opts.msaa ?? 4 }), half: mk(), q1: mk(), q2: mk(), e1: mk(), e2: mk(), shaft: mk() };
+  const qs = new THREE.Scene(), qc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const tri = new THREE.BufferGeometry(); tri.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
+  const quad = new THREE.Mesh(tri); quad.frustumCulled = false; qs.add(quad);
+  const VS = 'varying vec2 vUv; void main(){ vUv = position.xy*0.5+0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+  const mat = (fs, uniforms) => new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: fs, uniforms, depthTest: false, depthWrite: false });
+  const bright = mat(`uniform sampler2D tIn; uniform vec2 uTexel; uniform float uThresh; varying vec2 vUv;
+    void main(){
+      vec3 c = texture2D(tIn, vUv + uTexel*vec2(-0.5,-0.5)).rgb + texture2D(tIn, vUv + uTexel*vec2(0.5,-0.5)).rgb
+             + texture2D(tIn, vUv + uTexel*vec2(-0.5,0.5)).rgb + texture2D(tIn, vUv + uTexel*vec2(0.5,0.5)).rgb;
+      c *= 0.25;
+      float l = max(c.r, max(c.g, c.b));
+      float k = clamp(l - uThresh + 0.4, 0.0, 0.8); k = k*k/1.6;
+      float w = max(k, l - uThresh) / max(l, 1e-4);
+      gl_FragColor = vec4(min(c*w, vec3(40.0)), 1.0);
+    }`, { tIn: { value: null }, uTexel: { value: new THREE.Vector2() }, uThresh: { value: 0.85 } });
+  const blur = mat(`uniform sampler2D tIn; uniform vec2 uDir; varying vec2 vUv;
+    void main(){
+      vec3 c = texture2D(tIn, vUv).rgb*0.2270270;
+      c += (texture2D(tIn, vUv + uDir*1.3846154).rgb + texture2D(tIn, vUv - uDir*1.3846154).rgb)*0.3162162;
+      c += (texture2D(tIn, vUv + uDir*3.2307692).rgb + texture2D(tIn, vUv - uDir*3.2307692).rgb)*0.0702703;
+      gl_FragColor = vec4(c, 1.0);
+    }`, { tIn: { value: null }, uDir: { value: new THREE.Vector2() } });
+  const shafts = mat(`uniform sampler2D tIn; uniform vec2 uLight; uniform float uDensity, uDecay; varying vec2 vUv;
+    void main(){
+      vec2 uv = vUv; vec2 d = (uv - uLight)*uDensity/36.0; vec3 s = vec3(0.0); float il = 1.0;
+      for (int i = 0; i < 36; i++) { uv -= d; s += texture2D(tIn, clamp(uv, 0.001, 0.999)).rgb*il; il *= uDecay; }
+      gl_FragColor = vec4(s/36.0, 1.0);
+    }`, { tIn: { value: null }, uLight: { value: new THREE.Vector2(0.5, 0.5) }, uDensity: { value: 0.85 }, uDecay: { value: 0.965 } });
+  const comp = mat(`uniform sampler2D tScene, tB1, tB2, tShaft; uniform float uBloom, uShaft, uVig, uGrain, uFrame; uniform vec2 uRes; uniform vec3 uWarm; varying vec2 vUv;
+    vec3 aces(vec3 x){ const float a=2.51,b=0.03,c=2.43,d=0.59,e=0.14; return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.,1.); }
+    vec3 toSRGB(vec3 c){ c=max(c,0.); return mix(c*12.92, 1.055*pow(c,vec3(1./2.4))-0.055, step(0.0031308,c)); }
+    float hash(vec2 p){ p = fract(p*vec2(443.8975, 397.2973)); p += dot(p, p.yx + 19.19); return fract((p.x + p.y)*p.x); }
+    void main(){
+      vec3 c = texture2D(tScene, vUv).rgb;
+      vec3 b = texture2D(tB1, vUv).rgb*0.55 + texture2D(tB2, vUv).rgb*0.9;
+      c += b*uBloom*uWarm + texture2D(tShaft, vUv).rgb*uShaft*uWarm;
+      vec2 q = vUv - 0.5; q.x *= uRes.x/uRes.y;
+      float v = smoothstep(1.02, 0.30, length(q)*1.1);
+      c *= mix(1.0, v, uVig);
+      vec3 o = toSRGB(aces(c));
+      float n = hash(floor(vUv*uRes) + fract(uFrame*0.618)*vec2(97.0, 41.0)) - 0.5;
+      o += n*uGrain*(0.55 + 0.45*(1.0 - dot(o, vec3(0.3333))));
+      gl_FragColor = vec4(o, 1.0);
+    }`, { tScene: { value: null }, tB1: { value: null }, tB2: { value: null }, tShaft: { value: null }, uBloom: { value: 0.35 }, uShaft: { value: 0.0 },
+    uVig: { value: 0.55 }, uGrain: { value: 0.035 }, uFrame: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) }, uWarm: { value: new THREE.Vector3(1.0, 0.9, 0.78) } });
+  let W = 4, H = 4;
+  function setSize(w, h) {
+    W = Math.max(4, Math.floor(w)); H = Math.max(4, Math.floor(h));
+    rt.scene.setSize(W, H); rt.half.setSize(W >> 1, H >> 1);
+    rt.q1.setSize(W >> 2, H >> 2); rt.q2.setSize(W >> 2, H >> 2); rt.e1.setSize(W >> 3, H >> 3); rt.e2.setSize(W >> 3, H >> 3);
+    rt.shaft.setSize(W >> 2, H >> 2);
+    comp.uniforms.uRes.value.set(W, H);
+  }
+  const pass = (m, target) => { quad.material = m; renderer.setRenderTarget(target); renderer.render(qs, qc); };
+  function render(scene, camera) {
+    renderer.setRenderTarget(rt.scene); renderer.render(scene, camera);
+    bright.uniforms.tIn.value = rt.scene.texture; bright.uniforms.uTexel.value.set(1 / W, 1 / H); pass(bright, rt.half);
+    blur.uniforms.tIn.value = rt.half.texture; blur.uniforms.uDir.value.set(1 / (W >> 2), 0); pass(blur, rt.q1);
+    blur.uniforms.tIn.value = rt.q1.texture; blur.uniforms.uDir.value.set(0, 1 / (H >> 2)); pass(blur, rt.q2);
+    blur.uniforms.tIn.value = rt.q2.texture; blur.uniforms.uDir.value.set(1 / (W >> 3), 0); pass(blur, rt.e1);
+    blur.uniforms.tIn.value = rt.e1.texture; blur.uniforms.uDir.value.set(0, 1 / (H >> 3)); pass(blur, rt.e2);
+    if (comp.uniforms.uShaft.value > 0.001) { shafts.uniforms.tIn.value = rt.half.texture; pass(shafts, rt.shaft); }
+    comp.uniforms.tScene.value = rt.scene.texture; comp.uniforms.tB1.value = rt.q2.texture; comp.uniforms.tB2.value = rt.e2.texture; comp.uniforms.tShaft.value = rt.shaft.texture;
+    pass(comp, null);
+  }
+  return { setSize, render, comp, shafts, bright };
+}
+
+// ---------------------------------------------------------------- main factory
+async function createGrotto(opts) {
+  const { THREE, canvas, base = './', lattice = 6, film = false, onProgress = () => {}, pixelRatio = 1 } = opts;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: film });
+  renderer.setPixelRatio(pixelRatio);
+  renderer.setClearColor(0x000000, 1);
+  renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+  const post = makePost(THREE, renderer, opts);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(44, 16 / 9, 0.03, 160);
+  const noise = noiseTexture(THREE);
+  const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+  // ---------- shared uniforms
+  const U = {
+    uTime: { value: 0 }, uExposure: { value: 1 }, uFog: { value: 0.035 }, uAmbient: { value: 0.015 },
+    uDoorLight: { value: 0 }, uGold: { value: 0 }, uImageLamps: { value: 0 }, uAge: { value: 0 },
+    uLampU: { value: new THREE.Vector3(5.8, 1.3, 0.25) }, uLampPower: { value: 1 },
+    uLampHist: { value: Array.from({ length: 13 }, () => new THREE.Vector3(5.8, 1.3, 0.25)) }, uLampDelay: { value: 0 },
+    uTint: { value: new THREE.Vector3(0.80, 0.66, 0.46) }, uMirrorReveal: { value: 0 }, uMirrorRevealV: { value: 0 },
+    uNoise: { value: noise }, uSmoke: { value: 1 }, uShadow: { value: 0 }, uPost: { value: post ? 1 : 0 },
+  };
+  const surfU = {
+    uDissolve: { value: 0 }, uWallFade: { value: 0 }, uCeilFade: { value: 0 }, uDoorFill: { value: 0 }, uGlint: { value: 0 }, uFloorFade: { value: 0 },
+  };
+
+  // ---------- textures
+  const loader = new THREE.TextureLoader();
+  const texNames = ['t_west', 't_south', 't_qianfo', 't_east_l', 't_east_r', 't_caisson', 't_fringe', 't_dado', 't_wutai', 't_c329', 't_floor', 't_floor_h'];
+  const tex = {};
+  let loaded = 0;
+  const total = texNames.length + 2;
+  const tick = (label) => { loaded++; onProgress(loaded / total, label); };
+  await Promise.all(texNames.map(async (n) => {
+    const t = await loader.loadAsync(base + 'assets/' + n + '.jpg');
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = maxAniso;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    tex[n] = t; tick(n);
+  }));
+  tex.t_dado.wrapS = THREE.MirroredRepeatWrapping;
+  tex.t_floor_h.colorSpace = THREE.NoColorSpace;
+  tex.t_fringe.wrapS = THREE.MirroredRepeatWrapping;
+
+  // ---------- room geometry + materials
+  const G = buildRoomGeometries(THREE);
+  const cells = latticeCells(lattice);
+  const cellA = cellAttrs(THREE, cells);
+  const realA = cellAttrs(THREE, [{ i: 0, j: 0, ring: 0, bounce: 0 }]);
+  const surfMat = (map, o = {}, fx = false, side = THREE.FrontSide) => new THREE.ShaderMaterial({
+    uniforms: {
+      ...U, ...surfU,
+      uMap: { value: map || noise }, uMap2: { value: o.map2 || noise }, uUvScale: { value: new THREE.Vector2(...(o.scale || [1, 1])) }, uUvOffset: { value: new THREE.Vector2(...(o.offset || [0, 0])) },
+      uKind: { value: o.kind || 0 }, uBase: { value: new THREE.Vector3(...(o.base || [0.5, 0.4, 0.3])) },
+      uIsPanel: { value: o.panel ? 1 : 0 }, uIsCeil: { value: o.ceil ? 1 : 0 },
+    },
+    defines: fx ? { FX: 1 } : {},
+    vertexShader: SURF_VS, fragmentShader: SURF_FS, side,
+  });
+  const QF = [1 / R.QF_W, 1 / R.QF_H];
+  const meshes = [];
+  const evenCells = cells.filter((c) => ((c.i + c.j) & 1) === 0), oddCells = cells.filter((c) => ((c.i + c.j) & 1) === 1);
+  const evenA = cellAttrs(THREE, evenCells), oddA = cellAttrs(THREE, oddCells);
+  // one surface type = (even-parity mesh, odd-parity mesh), each with a plain and an FX material
+  const addSurf = (name, geom, map, o = {}, all = true) => {
+    const groups = all ? [[evenA, evenCells, THREE.FrontSide], [oddA, oddCells, THREE.BackSide]] : [[realA, [{ bounce: 0 }], THREE.FrontSide]];
+    const made = [];
+    for (const [attrs, cs, side] of groups) {
+      const ig = instanced(THREE, geom, attrs, cs.length);
+      const plain = surfMat(map, o, false, side), fx = surfMat(map, o, true, side);
+      const m = new THREE.Mesh(ig, plain); m.frustumCulled = false; m.name = name;
+      m.userData = { all, cells: cs, plain, fx, kind: o.kind || 0, panel: !!o.panel, ceil: !!o.ceil, frame: !!o.frame };
+      scene.add(m); meshes.push(m); made.push(m);
+    }
+    return made;
+  };
+  const fringeH = R.WALL_H - R.PANEL_TOP;
+  addSurf('panelW', G.panelW, tex.t_west, { panel: 1 });
+  addSurf('panelN', G.panelN, tex.t_qianfo, { panel: 1, scale: [(R.HX - R.MARGIN) * 2 / R.QF_W, (R.PANEL_TOP - R.DADO) / R.QF_H], offset: [0.37, 0.0] });
+  addSurf('panelS', G.panelS, tex.t_south, { panel: 1 });
+  addSurf('panelEL', G.panelEL, tex.t_east_l, { panel: 1 });
+  addSurf('panelER', G.panelER, tex.t_east_r, { panel: 1 });
+  const doorMeshes = addSurf('door', G.door, null, { kind: 2, panel: 1 });
+  addSurf('frames', G.frames, null, { kind: 5, frame: 1 });
+  addSurf('qfBands', G.qfBands, tex.t_qianfo, { scale: QF, offset: [0.13, 0.08] });
+  addSurf('ceil', G.ceil, tex.t_qianfo, { scale: [1 / (R.QF_W * 0.8), 1 / (R.QF_H * 0.8)], ceil: 1 });
+  addSurf('caisSide', G.caisSide, tex.t_fringe, { ceil: 1 });
+  addSurf('caisTop', G.caisTop, tex.t_caisson, { ceil: 1 });
+  addSurf('dado', G.dado, tex.t_dado, { scale: [1 / (R.DADO * 4096 / 702), 1 / R.DADO] });
+  addSurf('frieze', G.frieze, tex.t_fringe, { scale: [1 / (fringeH * 1650 / 400), 1 / fringeH], offset: [0, 0] });
+  addSurf('floor', G.floor, tex.t_floor, { kind: 1, map2: tex.t_floor_h });
+  addSurf('altar', G.altar, null, { kind: 3, base: [0.30, 0.12, 0.08] });
+  const corridor = [
+    ...addSurf('corrWutai', G.corrWutai, tex.t_wutai, {}, false),
+    ...addSurf('corrQf', G.corrQf, tex.t_qianfo, { scale: QF }, false),
+    ...addSurf('corrCeil', G.corrCeil, tex.t_c329, { scale: [1, 1] }, false),
+    ...addSurf('corrDado', G.corrDado, tex.t_dado, { scale: [1 / (R.DADO * 4096 / 702), 1 / R.DADO] }, false),
+    ...addSurf('corrPlaster', G.corrPlaster, null, { kind: 4, base: [0.30, 0.21, 0.14] }, false),
+  ];
+  const exterior = new THREE.Mesh(G.exterior, new THREE.ShaderMaterial({
+    uniforms: { ...U, uStrength: { value: 1 } },
+    vertexShader: SHAFT_VS,
+    fragmentShader: lampInit(`${GLSL_COMMON}
+      varying vec3 vP; varying vec2 vUv; uniform float uStrength;
+      void main(){ vec2 c=vUv-0.5; float v = exp(-dot(c*vec2(2.2,1.6),c*vec2(2.2,1.6))*2.2);
+        vec3 sky = mix(vec3(1.0,0.86,0.66), vec3(1.0,0.70,0.32), clamp(uGold,0.,1.));
+        gl_FragColor = vec4(finish(sky*(0.45+uDoorLight*1.4+uGold*2.0)*(0.35+0.65*v)*uStrength),1.); }`, 'uLampU'),
+  }));
+  exterior.frustumCulled = false; scene.add(exterior);
+  const shaft = new THREE.Mesh(G.shaft, new THREE.ShaderMaterial({
+    uniforms: { ...U, uStrength: { value: 0 } }, vertexShader: SHAFT_VS, fragmentShader: SHAFT_FS,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  }));
+  shaft.frustumCulled = false; shaft.renderOrder = 5; // (kept for reference, not added)
+
+  // ---------- glass overlays (dust) — wipe texture: 4 tiles in a 512x256 R8 texture
+  const WIPE_W = 512, WIPE_H = 256;
+  const wipeData = new Uint8Array(WIPE_W * WIPE_H);
+  const wipeTex = new THREE.DataTexture(wipeData, WIPE_W, WIPE_H, THREE.RedFormat, THREE.UnsignedByteType);
+  wipeTex.magFilter = wipeTex.minFilter = THREE.LinearFilter; wipeTex.needsUpdate = true;
+  const TILES = { W: [0, 0, 0.5, 0.5], N: [0.5, 0, 0.5, 0.5], S: [0, 0.5, 0.5, 0.5], E: [0.5, 0.5, 0.5, 0.5] };
+  const glassU = { uWipe: { value: wipeTex }, uDust: { value: 0 } };
+  const glassMeshes = [];
+  for (const w of ['W', 'N', 'S', 'E']) {
+    for (const [attrs, cs, side] of [[evenA, evenCells, THREE.FrontSide], [oddA, oddCells, THREE.BackSide]]) {
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { ...U, ...surfU, ...glassU, uTile: { value: new THREE.Vector4(...TILES[w]) } },
+        vertexShader: SURF_VS, fragmentShader: GLASS_FS, transparent: true, depthWrite: false,
+        blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, side,
+      });
+      const ig = instanced(THREE, G.glassParts[w], attrs, cs.length);
+      const m = new THREE.Mesh(ig, mat); m.frustumCulled = false; m.renderOrder = 4; m.userData = { all: true, cells: cs };
+      scene.add(m); glassMeshes.push(m);
+    }
+  }
+
+  // ---------- statue point cloud
+  const meta = await (await fetch(base + 'assets/bodhisattva.json')).json();
+  const NPTS = meta.count;
+  const posArr = new Uint16Array(NPTS * 3), nrmArr = new Int8Array(NPTS * 2), colArr = new Uint8Array(NPTS * 3);
+  const aPos = new THREE.BufferAttribute(posArr, 3, true);
+  const aNrm = new THREE.BufferAttribute(nrmArr, 2, true);
+  const aCol = new THREE.BufferAttribute(colArr, 3, true);
+  let ptsLoaded = 0;
+  const ptsU = {
+    uBBMin: { value: new THREE.Vector3(...meta.min) }, uBBMax: { value: new THREE.Vector3(...meta.max) },
+    uScale: { value: R.STATUE_H / (meta.max[1] - meta.min[1]) }, uRot: { value: -Math.PI / 2 }, uBaseY: { value: R.ALTAR_H },
+    uAppear: { value: 0 }, uWind: { value: 0 }, uGhost: { value: 0 }, uScatter: { value: 0 }, uStatueFade: { value: 0 },
+    uOwnLight: { value: 0 }, uLampsWave: { value: -1 }, uPxScale: { value: 800 }, uPointWorld: { value: 0.0036 }, uSizeMul: { value: 1 },
+  };
+  const ptsMat = (lod, near) => new THREE.ShaderMaterial({ uniforms: { ...U, ...ptsU, uLod: { value: lod }, uNear: { value: near ? 1 : 0 } }, vertexShader: PTS_VS, fragmentShader: PTS_FS });
+  const lodSpec = opts.lodSpec || [[0, 0, 1], [1, 1, 6], [2, 2, 24], [3, 99, 96]];
+  const ptsObjs = [];
+  for (const [r0, r1, lod] of lodSpec) {
+    const cs = cells.filter((c) => c.ring >= r0 && c.ring <= r1);
+    if (!cs.length) continue;
+    const ig = new THREE.InstancedBufferGeometry();
+    ig.setAttribute('position', aPos); ig.setAttribute('aNrm', aNrm); ig.setAttribute('aCol', aCol);
+    const ca = cellAttrs(THREE, cs);
+    for (const k of Object.keys(ca)) ig.setAttribute(k, ca[k]);
+    ig.instanceCount = cs.length;
+    ig.setDrawRange(0, 0);
+    const p = new THREE.Points(ig, ptsMat(lod, r0 <= 1)); p.frustumCulled = false;
+    p.userData = { lod, minBounce: Math.min(...cs.map((c) => c.bounce)), all: r0 > 0, cells: cs.length };
+    scene.add(p); ptsObjs.push(p);
+  }
+  async function fetchBin(name) {
+    const r = await fetch(base + 'assets/' + name);
+    if (!name.endsWith('.json')) return r.arrayBuffer();
+    const s = atob((await r.json()).b64); const u = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+    return u.buffer;
+  }
+  async function loadPart(name, offset, count) {
+    const buf = await fetchBin(name);
+    const pB = new Uint16Array(buf, 0, count * 3);
+    const nB = new Int8Array(buf, count * 6, count * 2);
+    const cB = new Uint8Array(buf, count * 8, count * 3);
+    posArr.set(pB, offset * 3); nrmArr.set(nB, offset * 2); colArr.set(cB, offset * 3);
+    aPos.needsUpdate = aNrm.needsUpdate = aCol.needsUpdate = true;
+    ptsLoaded = Math.max(ptsLoaded, offset + count);
+    for (const p of ptsObjs) p.geometry.setDrawRange(0, Math.floor(ptsLoaded / p.userData.lod));
+  }
+  const loadPoints = (async () => {
+    let off = 0;
+    for (const part of meta.parts) { await loadPart(part.file, off, part.count); off += part.count; tick(part.file); }
+  })();
+
+  // ---------- lamps
+  const lampGeom = (() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3));
+    g.setIndex([0, 1, 2, 0, 2, 3]); return g;
+  })();
+  const lampMat = (mode, size) => new THREE.ShaderMaterial({
+    uniforms: { ...U, uLampLocal: { value: new THREE.Vector3(-0.78, 0.30, 0) }, uSize: { value: size }, uMode: { value: mode },
+      uLampsWave: ptsU.uLampsWave, uLampsOn: { value: 0 }, uVisible: { value: 1 }, uReflect: { value: 1 }, uPxScale: ptsU.uPxScale, uMinPx: { value: mode ? 34 : 10 }, uHalo: { value: mode ? 2.6 : 1.0 } },
+    vertexShader: LAMP_VS, fragmentShader: LAMP_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const heldLamps = new THREE.Mesh(instanced(THREE, lampGeom, cellA, cells.length), lampMat(0, 0.09));
+  heldLamps.frustumCulled = false; heldLamps.renderOrder = 6; heldLamps.userData.all = true; scene.add(heldLamps);
+  const altarLamps = new THREE.Mesh(instanced(THREE, lampGeom, cellA, cells.length), lampMat(1, 0.13));
+  altarLamps.frustumCulled = false; altarLamps.renderOrder = 6; scene.add(altarLamps);
+
+  // ---------- falling sand (near rings only)
+  const sandCells = cells.filter((c) => c.ring <= 2);
+  const sandGeom = new THREE.InstancedBufferGeometry();
+  sandGeom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(3000 * 3), 3));
+  const sa = cellAttrs(THREE, sandCells); for (const k of Object.keys(sa)) sandGeom.setAttribute(k, sa[k]);
+  sandGeom.instanceCount = sandCells.length;
+  const sand = new THREE.Points(sandGeom, new THREE.ShaderMaterial({
+    uniforms: { ...U, uSand: { value: 0 }, uPxScale: ptsU.uPxScale }, vertexShader: SAND_VS, fragmentShader: lampInit(`${GLSL_COMMON}\nvarying vec3 vCol;\nvoid main(){ vec2 c = gl_PointCoord*2.0-1.0; float a = max(0.0, 1.0-dot(c,c)); gl_FragColor = vec4(finish(vCol)*a, 1.0); }`, 'uLampU'),
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  sand.frustumCulled = false; sand.renderOrder = 3; sand.userData.all = true; scene.add(sand);
+
+  // ---------- golden motes (the dawn vision)
+  const motes = (() => {
+    const NM = opts.motes || 150000; const pos = new Float32Array(NM * 3), nrm = new Float32Array(NM * 3), uvs = new Float32Array(NM * 2), wall = new Float32Array(NM);
+    let seed = 366; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const pS0 = -R.HX + R.MARGIN, pS1 = R.HX - R.MARGIN;
+    for (let k = 0; k < NM; k++) {
+      const pick = rnd(); let p, n, uv, w;
+      if (pick < 0.26) { // corridor south wall: thousand Buddhas
+        const x = R.HX + rnd() * R.CORR_LEN, y = R.DADO + rnd() * (R.CORR_H - R.DADO);
+        p = [x, y, R.CORR_HALF - 0.004]; n = [0, 0, -1]; uv = [(x + 0.4) / R.QF_W, y / R.QF_H]; w = 0;
+      } else if (pick < 0.50) { // north panel: thousand Buddhas
+        const sx = pS0 + rnd() * (pS1 - pS0), y = R.DADO + rnd() * (R.PANEL_TOP - R.DADO);
+        p = [sx, y, -R.HZ + 0.004]; n = [0, 0, 1]; uv = [((sx - pS0) / (pS1 - pS0)) * ((pS1 - pS0) / R.QF_W) + 0.37, ((y - R.DADO) / (R.PANEL_TOP - R.DADO)) * ((R.PANEL_TOP - R.DADO) / R.QF_H)]; w = 0;
+      } else if (pick < 0.80) { // west tableau
+        const sx = pS0 + rnd() * (pS1 - pS0), y = R.DADO + rnd() * (R.PANEL_TOP - R.DADO);
+        p = [-R.HX + 0.004, y, -sx]; n = [1, 0, 0]; uv = [(sx - pS0) / (pS1 - pS0), (y - R.DADO) / (R.PANEL_TOP - R.DADO)]; w = 1;
+      } else { // south panel
+        const sx = pS0 + rnd() * (pS1 - pS0), y = R.DADO + rnd() * (R.PANEL_TOP - R.DADO);
+        p = [-sx, y, R.HZ - 0.004]; n = [0, 0, -1]; uv = [(sx - pS0) / (pS1 - pS0), (y - R.DADO) / (R.PANEL_TOP - R.DADO)]; w = 2;
+      }
+      pos.set(p, k * 3); nrm.set(n, k * 3); uvs.set(uv, k * 2); wall[k] = w;
+    }
+    const gm = new THREE.BufferGeometry();
+    gm.setAttribute('position', new THREE.BufferAttribute(pos, 3)); gm.setAttribute('aNrm3', new THREE.BufferAttribute(nrm, 3));
+    gm.setAttribute('aUv', new THREE.BufferAttribute(uvs, 2)); gm.setAttribute('aWall', new THREE.BufferAttribute(wall, 1));
+    const mm = new THREE.Points(gm, new THREE.ShaderMaterial({
+      uniforms: { ...U, uQf: { value: tex.t_qianfo }, uWest: { value: tex.t_west }, uSouth: { value: tex.t_south }, uVision: { value: 0 }, uPxScale: ptsU.uPxScale, uGather: { value: 0 }, uGatherPt: { value: new THREE.Vector3(0, 0.75, 0) } },
+      vertexShader: MOTE_VS, fragmentShader: MOTE_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    mm.frustumCulled = false; mm.renderOrder = 7; scene.add(mm); return mm;
+  })();
+
+  // ---------- petals (state written by the app each frame)
+  const NPET = 160;
+  const petals = (() => {
+    const ig = new THREE.InstancedBufferGeometry();
+    const corner = new Float32Array(NPET * 8), idx = [];
+    const cs = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    for (let i = 0; i < NPET; i++) { for (let v = 0; v < 4; v++) corner.set(cs[v], (i * 4 + v) * 2); idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3); }
+    ig.setIndex(idx);
+    ig.setAttribute('position', new THREE.BufferAttribute(new Float32Array(NPET * 12), 3));
+    ig.setAttribute('aCorner', new THREE.BufferAttribute(corner, 2));
+    const aP = new THREE.BufferAttribute(new Float32Array(NPET * 16), 4); aP.setUsage(THREE.DynamicDrawUsage);
+    const aQ = new THREE.BufferAttribute(new Float32Array(NPET * 16), 4); aQ.setUsage(THREE.DynamicDrawUsage);
+    ig.setAttribute('aP', aP); ig.setAttribute('aQ', aQ);
+    for (const k of Object.keys(cellA)) ig.setAttribute(k, cellA[k]);
+    ig.instanceCount = 1;
+    const m = new THREE.Mesh(ig, new THREE.ShaderMaterial({
+      uniforms: { ...U }, vertexShader: PETAL_VS, fragmentShader: PETAL_FS, transparent: true, depthWrite: false,
+      blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, side: THREE.DoubleSide,
+    }));
+    m.frustumCulled = false; m.renderOrder = 5; m.visible = false; scene.add(m);
+    m.userData = { aP, aQ };
+    return m;
+  })();
+  function setPetal(i, x, y, z, spin, tumble, size, hue, alpha) {
+    const P = petals.userData.aP.array, Q = petals.userData.aQ.array;
+    for (let v = 0; v < 4; v++) { const o = (i * 4 + v) * 4; P[o] = x; P[o + 1] = y; P[o + 2] = z; P[o + 3] = spin; Q[o] = tumble; Q[o + 1] = size; Q[o + 2] = hue; Q[o + 3] = alpha; }
+  }
+  function commitPetals(visible) { petals.userData.aP.needsUpdate = true; petals.userData.aQ.needsUpdate = true; petals.visible = !!visible; }
+
+  // ---------- wipe helpers (dust on mirrors)
+  function wipeAt(wall, u, v, radius = 0.06, amount = 1, mode = 'add') {
+    const t = TILES[wall]; if (!t) return;
+    const cx = (t[0] + u * t[2]) * WIPE_W, cy = (t[1] + v * t[3]) * WIPE_H;
+    const rx = radius * t[2] * WIPE_W * 2.0, ry = radius * t[3] * WIPE_H * 2.0 * 1.6;
+    const x0 = Math.max(Math.floor(t[0] * WIPE_W), Math.floor(cx - rx)), x1 = Math.min(Math.ceil((t[0] + t[2]) * WIPE_W) - 1, Math.ceil(cx + rx));
+    const y0 = Math.max(Math.floor(t[1] * WIPE_H), Math.floor(cy - ry)), y1 = Math.min(Math.ceil((t[1] + t[3]) * WIPE_H) - 1, Math.ceil(cy + ry));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const dx = (x - cx) / rx, dy = (y - cy) / ry; const d = dx * dx + dy * dy;
+      if (d < 1) {
+        const k = y * WIPE_W + x; const f = 1 - d * d; const add = Math.round(Math.min(1, f * 1.6) * 255 * amount);
+        wipeData[k] = mode === 'max' ? Math.max(wipeData[k], add) : Math.min(255, wipeData[k] + add);
+      }
+    }
+    wipeTex.needsUpdate = true;
+  }
+  function regrowDust(dt, rate = 0.04) {
+    const dec = Math.max(1, Math.round(255 * rate * dt));
+    for (let k = 0; k < wipeData.length; k++) { const v = wipeData[k]; if (v) wipeData[k] = v > dec ? v - dec : 0; }
+    wipeTex.needsUpdate = true;
+  }
+  function clearWipe() { wipeData.fill(0); wipeTex.needsUpdate = true; }
+  // ray -> mirror hit (real room walls), returns {wall,u,v,point}
+  const _ray = new THREE.Ray();
+  function hitMirror(ndcX, ndcY) {
+    _ray.origin.setFromMatrixPosition(camera.matrixWorld);
+    _ray.direction.set(ndcX, ndcY, 0.5).unproject(camera).sub(_ray.origin).normalize();
+    const o = _ray.origin, d = _ray.direction;
+    let best = null;
+    const test = (wall, axis, val) => {
+      const dd = d[axis]; if (Math.abs(dd) < 1e-6) return;
+      const t = (val - o[axis]) / dd; if (t <= 0) return;
+      const p = o.clone().addScaledVector(d, t);
+      const W = WALLS[wall]; const s = (p.x - W.o[0]) * W.r[0] + (p.z - W.o[2]) * W.r[2];
+      const y0 = wall === 'E' ? 0 : R.DADO;
+      if (Math.abs(s) > R.HX || p.y < y0 || p.y > R.PANEL_TOP) return;
+      if (!best || t < best.t) best = { t, wall, u: (s + R.HX) / (2 * R.HX), v: (p.y - y0) / (R.PANEL_TOP - y0), point: p };
+    };
+    test('W', 'x', -R.HX); test('E', 'x', R.HX); test('N', 'z', -R.HZ); test('S', 'z', R.HZ);
+    return best;
+  }
+
+  // ---------- state application
+  const tmpV = new THREE.Vector3();
+  const lampHist = [];
+  let viewH = 1080;
+  function apply(S) {
+    U.uTime.value = S.time; U.uExposure.value = S.exposure; U.uFog.value = S.fog; U.uAmbient.value = S.ambient;
+    U.uDoorLight.value = S.doorLight; U.uGold.value = S.gold; U.uImageLamps.value = S.imageLamps; U.uAge.value = S.age;
+    U.uLampU.value.set(...S.lampPos);
+    // lamp history: each reflection depth sees the lamp as it was (depth x delay) seconds ago
+    const delay = S.lampDelay ?? 0;
+    if (delay > 0) {
+      lampHist.push([S.time, S.lampPos[0], S.lampPos[1], S.lampPos[2]]);
+      while (lampHist.length > 2 && lampHist[1][0] < S.time - delay * 13 - 0.5) lampHist.shift();
+      for (let b = 0; b < 13; b++) {
+        const tq = S.time - b * delay; let k = lampHist.length - 1;
+        while (k > 0 && lampHist[k - 1][0] > tq) k--;
+        const a = lampHist[Math.max(0, k - 1)], c = lampHist[k];
+        const f = c[0] > a[0] ? Math.max(0, Math.min(1, (tq - a[0]) / (c[0] - a[0]))) : 1;
+        U.uLampHist.value[b].set(a[1] + (c[1] - a[1]) * f, a[2] + (c[2] - a[2]) * f, a[3] + (c[3] - a[3]) * f);
+      }
+      U.uLampDelay.value = 1;
+    } else { lampHist.length = 0; U.uLampDelay.value = 0; }
+    U.uSmoke.value = S.smoke ?? 1;
+    U.uShadow.value = Math.max(0, Math.min(1, (S.appear - 0.85) / 0.15)) * (1 - Math.min(1, S.wind * 3)) * (1 - Math.min(1, S.scatter * 2)) * (1 - S.statueFade) * (S.lampsOn > 0.5 ? 0 : 1);
+    const fl = S.lampFlicker ? (1 + 0.035 * Math.sin(S.time * 11.3) + 0.025 * Math.sin(S.time * 23.7 + 1.3) + 0.02 * Math.sin(S.time * 5.1)) : 1;
+    U.uLampPower.value = S.lampPower * fl;
+    U.uMirrorReveal.value = S.mirrorReveal; U.uMirrorRevealV.value = S.mirrorReveal;
+    surfU.uDissolve.value = S.dissolve; surfU.uWallFade.value = S.wallFade; surfU.uCeilFade.value = S.ceilFade;
+    surfU.uDoorFill.value = S.doorFill; surfU.uGlint.value = S.glint; surfU.uFloorFade.value = S.floorFade || 0;
+    ptsU.uAppear.value = S.appear; ptsU.uWind.value = S.wind; ptsU.uGhost.value = S.ghost; ptsU.uScatter.value = S.scatter;
+    ptsU.uStatueFade.value = S.statueFade; ptsU.uOwnLight.value = S.ownLight; ptsU.uLampsWave.value = S.lampsWave;
+    glassU.uDust.value = S.dust;
+    sand.material.uniforms.uSand.value = S.sand;
+    heldLamps.material.uniforms.uVisible.value = S.lampVisible;
+    const ta = S.tintAmt ?? 1;
+    heldLamps.material.uniforms.uReflect.value = ta;
+    U.uTint.value.set(1 - ta * 0.20, 1 - ta * 0.34, 1 - ta * 0.54);
+    altarLamps.material.uniforms.uLampsOn.value = S.lampsOn;
+    altarLamps.visible = S.lampsOn > 0.001;
+    exterior.visible = S.corridor > 0.5;
+    for (const c of corridor) c.visible = S.corridor > 0.5;
+    const reveal = S.mirrorReveal <= 0.0001 ? -1 : S.mirrorReveal + 1;
+    const countFor = (cs) => { let k = 0; while (k < cs.length && cs[k].bounce <= Math.max(reveal, 0)) k++; return Math.max(1, k); };
+    const fxPanel = S.dissolve > 0.0 && S.dissolve < 1.0;
+    for (const m of meshes) {
+      const u = m.userData;
+      let vis = true, fx = S.wallFade > 0;
+      if (u.panel) { vis = S.dissolve < 1.0; fx = fx || fxPanel; }
+      if (u.frame) { vis = S.dissolve > 0.001; fx = fx || S.dissolve < 0.81; }
+      if (u.kind === 2) { vis = vis && S.doorFill > 0.001; fx = fx || S.doorFill < 1.0; }
+      if (u.ceil) { fx = fx || S.ceilFade > 0; vis = vis && S.ceilFade < 1.0; }
+      if (S.wallFade >= 1.0 && !u.ceil) vis = false;
+      m.visible = vis;
+      const want = fx ? u.fx : u.plain;
+      if (m.material !== want) m.material = want;
+      if (u.all) {
+        m.geometry.instanceCount = reveal < 0 ? (u.cells[0].bounce === 0 ? 1 : 0) : countFor(u.cells);
+        if (m.geometry.instanceCount === 0) m.visible = false;
+      }
+    }
+    for (const m of glassMeshes) {
+      const real = m.userData.cells[0].bounce === 0;
+      m.geometry.instanceCount = real ? 1 : 0;
+      m.visible = real && S.dissolve > 0.15 && S.wallFade < 0.7;
+    }
+    const nVis = reveal < 0 ? 1 : cells.filter((c) => c.bounce <= reveal).length;
+    heldLamps.geometry.instanceCount = nVis;
+    petals.geometry.instanceCount = nVis;
+    sand.geometry.instanceCount = S.mirrorReveal <= 0.0001 ? 1 : sandCells.length;
+    sand.visible = S.sand > 0.001;
+    motes.material.uniforms.uVision.value = S.vision ?? 0; motes.visible = (S.vision ?? 0) > 0.002;
+    motes.material.uniforms.uGather.value = S.gather ?? 0;
+    for (const p of ptsObjs) p.visible = p.userData.minBounce <= S.mirrorReveal + 1 && S.statueFade < 0.999;
+    camera.fov = S.camFov; camera.position.set(...S.camPos);
+    camera.up.set(Math.sin(S.camRoll), Math.cos(S.camRoll), 0);
+    camera.lookAt(tmpV.set(...S.camTarget));
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    ptsU.uPxScale.value = viewH / (2 * Math.tan(THREE.MathUtils.degToRad(S.camFov) / 2));
+    if (post) {
+      const pc = post.comp.uniforms;
+      pc.uBloom.value = S.bloom ?? 0.35; pc.uVig.value = S.vigAmt ?? 0.55; pc.uGrain.value = S.grain ?? 0.035;
+      // light shafts: from the doorway while daylight pours in, otherwise from the lamp in your hand
+      const door = S.corridor > 0.5 ? (S.doorLight * 2.2 + S.gold * 2.0) : 0;
+      const lamp = S.lampVisible * Math.min(1, S.lampPower);
+      const useDoor = door > lamp * 0.6;
+      tmpV.set(...(useDoor ? [R.HX + R.CORR_LEN, 1.15, 0] : S.lampPos)).project(camera);
+      const front = tmpV.z < 1 && tmpV.z > -1;
+      const ux = tmpV.x * 0.5 + 0.5, uy = tmpV.y * 0.5 + 0.5;
+      const on = front ? Math.max(0, 1 - Math.max(0, Math.abs(ux - 0.5) - 0.6) * 3) * Math.max(0, 1 - Math.max(0, Math.abs(uy - 0.5) - 0.6) * 3) : 0;
+      post.shafts.uniforms.uLight.value.set(ux, uy);
+      post.shafts.uniforms.uDecay.value = useDoor ? 0.972 : 0.955;
+      post.shafts.uniforms.uDensity.value = useDoor ? 0.95 : 0.7;
+      pc.uShaft.value = (S.shafts ?? 0.6) * on * (useDoor ? Math.min(1.6, door) : lamp * 0.55);
+    }
+  }
+  function resize(w, h) {
+    renderer.setSize(w, h, false); camera.aspect = w / h; viewH = h * renderer.getPixelRatio();
+    if (post) post.setSize(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+  }
+  let frameNo = 0;
+  function render(frame) { frameNo = frame ?? frameNo + 1; if (post) { post.comp.uniforms.uFrame.value = frameNo; post.render(scene, camera); } else renderer.render(scene, camera); }
+  return { THREE, renderer, scene, camera, apply, render, resize, post, loadPoints, wipeAt, regrowDust, clearWipe, hitMirror, cells, NPTS, get ptsLoaded() { return ptsLoaded; }, ROOM, NPET, setPetal, commitPetals };
+}
+
+// 照见 · 镜窟 — the shared timeline (film = played straight; web = played chapter by chapter).
+
+const FPS = 30;
+const DURATION = 174.0;
+
+// narration cues: VO line i starts at t (durations come from the processed audio)
+const VO = [
+  { i: 0, t: 10.0, d: 7.698 }, { i: 1, t: 19.2, d: 4.391 }, { i: 2, t: 29.0, d: 6.339 }, { i: 3, t: 41.2, d: 6.456 },
+  { i: 4, t: 54.3, d: 6.521 }, { i: 5, t: 62.0, d: 7.968 }, { i: 6, t: 71.0, d: 4.638 }, { i: 7, t: 77.0, d: 4.694 },
+  { i: 8, t: 93.0, d: 5.41 }, { i: 9, t: 99.6, d: 5.444 }, { i: 10, t: 106.0, d: 5.743 }, { i: 11, t: 114.2, d: 4.96 },
+  { i: 12, t: 121.0, d: 5.807 }, { i: 13, t: 133.2, d: 6.77 }, { i: 14, t: 141.4, d: 4.066 }, { i: 15, t: 148.6, d: 5.411 },
+  { i: 16, t: 155.6, d: 5.227 }, { i: 17, t: 163.4, d: 2.828 },
+];
+
+const LINES = [
+  ['公元三六六年，一位僧人行至敦煌崖前，忽见金光，状有千佛。', 'In AD 366, a monk reached the cliffs of Dunhuang and suddenly saw a golden light, shaped like a thousand Buddhas.'],
+  ['于是，人们在山中，凿了一千年的空。', 'And so, for a thousand years, people carved emptiness into the mountain.'],
+  ['第三二八窟。一尊菩萨跪在佛前，合掌，一千二百年。', 'Cave 328. A bodhisattva knelt before the Buddha, palms joined, for twelve hundred years.'],
+  ['一九二四年，它被带离敦煌。佛前，从此空了一个位置。', 'In 1924 it was taken from Dunhuang. Since then, a place before the Buddha has stood empty.'],
+  ['今天，我们为它造一座窟。四面墙上，不画佛，只立镜子。', 'Today we build it a cave. On its four walls, no Buddhas — only mirrors.'],
+  ['一千三百年前，法藏用十面镜子，围住一尊佛像，点起一支火炬。', 'Thirteen centuries ago, Fazang surrounded a Buddha image with ten mirrors, and lit a torch.'],
+  ['镜镜相照，佛佛无尽。一即一切，一切即一。', 'Mirror within mirror, Buddha beyond Buddha, without end. One is all; all is one.'],
+  ['它合掌朝拜的千佛，原来都是它自己。', 'The thousand Buddhas it bows to are, every one of them, itself.'],
+  ['风沙落在镜上。时时勤拂拭，勿使惹尘埃。', 'Sand settles on the mirrors. Wipe them, again and again; let no dust alight.'],
+  ['擦去一层，又落一层。壁上的佛，脸渐渐黑了。', 'Wipe one layer away, and another falls. On the walls, the painted faces slowly darken.'],
+  ['过去心不可得，现在心不可得，未来心不可得。', 'The past mind cannot be grasped. The present mind cannot be grasped. The future mind cannot be grasped.'],
+  ['一切有为法，如梦幻泡影，如露亦如电。', 'All conditioned things are like a dream, an illusion, a bubble, a shadow; like dew, like lightning.'],
+  ['六十八万粒颜色，散了，又聚。不生不灭，不增不减。', '683,529 grains of colour scatter, and gather again. Nothing arises, nothing ceases; nothing is added, nothing lost.'],
+  ['菩提本无树，明镜亦非台。本来无一物，何处惹尘埃。', 'Bodhi is no tree; the bright mirror is no stand. From the start there is not one thing — where could dust alight?'],
+  ['镜中照见一切，唯独不见持灯的人。', 'The mirrors show everything, except the one who holds the lamp.'],
+  ['一灯能除千年暗。一灯然百千灯，明终不尽。', 'One lamp ends a thousand years of darkness. One lamp lights a hundred thousand lamps, and its light never runs out.'],
+  ['一室之中，千灯并照。光入光中，互不相碍。', 'In one room, a thousand lamps shine together. Light enters light, and none obstructs another.'],
+  ['灯可以换，光一直在。', 'Change the lamp. The light stays.'],
+];
+
+const CHAPTERS = [
+  { id: 'gold', zh: '金光', en: 'Golden Light', year: '366', t0: 8.6, t1: 27.0, hint: ['按住，收拢金光', 'Press and hold to gather the light'], interact: 'gather' },
+  { id: 'kneel', zh: '跪', en: 'Kneeling', year: '700', t0: 27.0, t1: 40.6, hint: ['移动灯火，照见壁画', 'Move the lamp to light the murals'] },
+  { id: 'taken', zh: '离', en: 'Taken', year: '1924', t0: 40.6, t1: 53.2, hint: ['移动灯火，照见壁画', 'Move the lamp to light the murals'] },
+  { id: 'mirror', zh: '镜', en: 'Mirrors', year: '2026', t0: 53.2, t1: 70.6, hint: ['移动灯火，看镜中的光迟迟跟来——越深的倒影，越是从前', 'Move the lamp and watch the light follow late — the deeper the reflection, the earlier the moment'], interact: 'delay' },
+  { id: 'itself', zh: '千佛', en: 'A Thousand Selves', year: '2026', t0: 70.6, t1: 92.0, hint: ['试着接住落花', 'Try to catch a falling petal'], interact: 'petals' },
+  { id: 'dust', zh: '尘', en: 'Dust', year: '…', t0: 92.0, t1: 112.6, hint: ['按住拖动，拂拭明镜', 'Press and drag to wipe the mirror'], interact: 'wipe' },
+  { id: 'arise', zh: '生灭', en: 'Arising, Ceasing', year: '—', t0: 112.6, t1: 132.6, hint: ['按住，散；松开，聚', 'Hold to scatter · release to gather'], interact: 'scatter' },
+  { id: 'empty', zh: '空', en: 'Emptiness', year: '—', t0: 132.6, t1: 147.4, hint: ['放下，静止片刻', 'Let go — be still for a moment'], interact: 'still' },
+  { id: 'lamps', zh: '灯', en: 'Lamps', year: '∞', t0: 147.4, t1: 161.0, gate: ['点灯', 'Light the lamp'] },
+  { id: 'room', zh: '一室', en: 'One Space', year: '∞', t0: 161.0, t1: 174.0 },
+];
+
+// ---------------------------------------------------------------- easing + interpolation
+const ease = {
+  lin: (x) => x,
+  io: (x) => x * x * (3 - 2 * x),
+  io2: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+  in: (x) => x * x,
+  out: (x) => 1 - (1 - x) * (1 - x),
+  out3: (x) => 1 - Math.pow(1 - x, 3),
+  step: (x) => (x < 1 ? 0 : 1),
+};
+// track keys: [t, value, easeName?]  — ease applies to the segment ending at this key
+function evalTrack(keys, t) {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let k = 1; k < keys.length; k++) {
+    const [t1, v1, e] = keys[k];
+    if (t <= t1) {
+      const [t0, v0] = keys[k - 1];
+      const x = t1 > t0 ? (t - t0) / (t1 - t0) : 1;
+      return v0 + (v1 - v0) * (ease[e || 'io'])(x);
+    }
+  }
+  return keys[keys.length - 1][1];
+}
+
+// cubic Hermite through keys with Catmull-Rom tangents; keys flagged 'stop' have zero velocity
+function hermite(keys, t, field) {
+  const n = keys.length;
+  if (t <= keys[0].t) return keys[0][field].slice();
+  if (t >= keys[n - 1].t) return keys[n - 1][field].slice();
+  let k = 0; while (k < n - 2 && t > keys[k + 1].t) k++;
+  const a = keys[k], b = keys[k + 1];
+  const dt = b.t - a.t, s = (t - a.t) / dt;
+  const tan = (i) => {
+    const K = keys[i];
+    if (K.stop || i === 0 || i === n - 1) return K[field].map(() => 0);
+    const p = keys[i - 1], q = keys[i + 1];
+    return K[field].map((_, d) => (q[field][d] - p[field][d]) / (q.t - p.t));
+  };
+  const m0 = tan(k), m1 = tan(k + 1);
+  const h00 = 2 * s * s * s - 3 * s * s + 1, h10 = s * s * s - 2 * s * s + s, h01 = -2 * s * s * s + 3 * s * s, h11 = s * s * s - s * s;
+  return a[field].map((_, d) => h00 * a[field][d] + h10 * dt * m0[d] + h01 * b[field][d] + h11 * dt * m1[d]);
+}
+
+// ---------------------------------------------------------------- camera path
+const C = (t, pos, target, fov, stop = false) => ({ t, pos, target, fov: [fov], stop });
+const CAMERA = [
+  C(0.0, [5.05, 1.52, 0.0], [0, 1.45, 0], 46, true),
+  C(8.6, [5.05, 1.52, 0.0], [0, 1.45, 0], 46, true),
+  C(19.0, [2.6, 1.50, 0.02], [-1.8, 1.55, 0], 46),
+  C(23.5, [0.95, 1.52, 0.30], [-1.8, 1.95, -0.1], 48),
+  C(27.0, [0.85, 1.55, 0.55], [-1.2, 1.25, -0.2], 46, true),
+  C(33.5, [0.62, 1.45, 1.15], [-0.1, 1.02, 0.0], 42),
+  C(38.6, [-0.58, 1.34, 1.02], [0.0, 1.10, 0.0], 38),
+  C(40.6, [-0.64, 1.32, 0.90], [0.0, 1.12, 0.0], 36, true),
+  C(42.4, [-1.15, 1.45, 1.30], [0.6, 1.0, -0.25], 44),
+  C(49.0, [-1.25, 1.50, 1.35], [0.9, 1.0, -0.15], 44),
+  C(53.6, [-0.95, 1.38, 0.95], [0.0, 0.65, 0.0], 40, true),
+  // cut while the door fills with sand (frame goes dark at ~54.8–55.6)
+  C(55.0, [-0.95, 1.38, 0.95], [0.0, 0.65, 0.0], 40, true),
+  C(55.05, [1.38, 1.52, 0.40], [-1.8, 1.45, 0.0], 44, true),
+  C(63.0, [1.12, 1.50, 0.36], [-1.8, 1.42, 0.0], 42),
+  C(70.6, [0.95, 1.50, 0.75], [-1.8, 1.35, -1.25], 46),
+  C(76.2, [1.22, 1.55, 1.22], [-1.8, 1.3, -1.8], 48),
+  C(81.6, [1.28, 1.42, 0.0], [-1.8, 1.24, 0.0], 30),
+  C(88.0, [1.06, 1.40, 0.02], [-1.8, 1.24, 0.0], 25),
+  C(92.0, [1.22, 1.46, -0.70], [-1.8, 1.30, 0.6], 40),
+  C(98.0, [1.02, 1.45, 0.58], [-1.8, 1.35, 0.2], 42, true),
+  C(103.6, [0.96, 1.45, 0.58], [-1.8, 1.35, 0.15], 42),
+  C(108.2, [0.55, 1.42, 0.80], [-1.0, 3.3, -0.4], 50),
+  C(112.0, [0.0, 1.6, 0.25], [0.0, 4.1, 0.0], 55),
+  C(114.6, [0.0, 3.9, 0.12], [0.0, 7.0, -0.6], 58),
+  C(115.8, [0.0, 5.6, 0.35], [0.0, 3.0, -2.2], 56),
+  C(117.6, [0.0, 8.6, 0.45], [0.0, 0.0, 0.0], 54),
+  C(124.0, [0.6, 13.0, 2.5], [0.0, 0.0, 0.0], 50),
+  C(131.0, [2.2, 14.0, 4.6], [0.0, 0.0, 0.0], 48),
+  C(138.0, [1.2, 6.5, 2.6], [0.0, 0.8, 0.0], 46),
+  C(141.6, [0.95, 1.75, 1.10], [0.45, 1.38, 0.55], 40),
+  C(146.4, [0.62, 1.42, 0.86], [0.22, 1.30, 0.42], 34, true),
+  C(149.4, [0.40, 1.10, 0.62], [-0.78, 0.40, 0.0], 40),
+  C(153.0, [0.85, 2.3, 1.7], [-0.8, 0.5, 0.0], 46),
+  C(161.0, [2.0, 7.8, 6.2], [-0.5, 0.0, 0.0], 50),
+  C(168.0, [2.5, 10.6, 9.0], [-0.5, 0.0, 0.0], 46),
+  C(174.0, [2.65, 11.4, 9.8], [-0.5, 0.0, 0.0], 45, true),
+];
+
+// held-lamp offset in camera space (right, up, forward)
+const LAMP_OFF = [0.14, -0.22, 0.52];
+// absolute lamp keys (used when lampAbs = 1)
+const LAMP_KEYS = [
+  { t: 140.6, pos: [0.62, 1.40, 0.70], stop: true },
+  { t: 146.4, pos: [0.22, 1.30, 0.42], stop: true },
+  { t: 148.4, pos: [-0.55, 0.62, 0.12] },
+  { t: 149.4, pos: [-0.74, 0.40, 0.02], stop: true },
+  { t: 174.0, pos: [-0.74, 0.40, 0.02], stop: true },
+];
+
+// ---------------------------------------------------------------- parameter tracks
+const TRACKS = {
+  exposure: [[0, 0.82], [19.0, 0.86], [24.0, 1.0], [53.8, 1.0], [54.9, 0.0, 'in'], [55.6, 0.0], [57.2, 1.05, 'out'], [112, 1.05], [118, 1.35], [131, 1.35], [138, 1.1], [146, 1.15], [174, 1.15]],
+  doorLight: [[0, 0.13], [19, 0.14], [27, 0.10], [41, 0.12], [47, 0.22], [52.5, 0.14], [54.6, 0.0], [174, 0]],
+  gold: [[0, 0], [13.6, 0], [15.6, 1.0], [17.6, 0.9], [21.5, 0.12], [27, 0.0], [174, 0]],
+  glint: [[0, 0], [13.6, 0], [15.6, 1.0], [18.0, 0.6], [24, 0.0], [174, 0]],
+  ambient: [[0, 0.006], [174, 0.006]],
+  lampPower: [[0, 0.36], [19, 0.5], [24, 0.85], [27, 1.0], [53.2, 1.0], [54.6, 0.2], [56.4, 0.25], [58.5, 1.0], [112, 1.0],
+    // rising above the lattice: the held lamp is compensated for height so the thousand rooms below stay seen
+    [113.5, 1.03125], [114.6, 1.6], [115.8, 3.5], [117.6, 8.0], [124, 18], [131, 20], [134.5, 13], [137.2, 4.0], [139.2, 0.90669],
+    [140, 0.9], [146.4, 0.9], [149.4, 0.75], [151, 0.12], [174, 0.08]],
+  lampVisible: [[0, 1], [148.9, 1], [150.2, 0.0], [174, 0]],
+  appear: [[0, 0], [27.4, 0], [33.4, 1.0, 'io'], [53.0, 1.0], [55.6, 1.0], [55.65, 0.0, 'step'], [62.2, 0.0], [67.6, 1.0, 'io'], [174, 1]],
+  wind: [[0, 0], [42.6, 0], [49.4, 1.0, 'lin'], [55.6, 1.0], [55.65, 0.0, 'step'], [174, 0]],
+  ghost: [[0, 0], [43, 0], [48, 1.0], [55.6, 1.0], [55.65, 0.0, 'step'], [174, 0]],
+  doorFill: [[0, 0], [53.2, 0], [55.4, 1.0, 'io'], [174, 1]],
+  corridor: [[0, 1], [55.4, 1], [55.45, 0, 'step'], [174, 0]],
+  dissolve: [[0, 0], [56.4, 0], [61.8, 1.0, 'io'], [174, 1]],
+  mirrorReveal: [[0, 0], [56.8, 0], [60.4, 2.0, 'in'], [67.0, 12.0, 'out'], [138.0, 12.0], [141.0, 0.0, 'io'], [147.6, 0.0], [147.7, 12.0, 'step'], [174, 12]],
+  imageLamps: [[0, 0], [57, 0], [62, 1.0], [131, 1.0], [137, 0.0], [174, 0]],
+  sand: [[0, 0.25], [27, 0.25], [36, 0.35], [41, 0.8], [47, 0.4], [92, 0.4], [96, 1.0], [108, 1.0], [114, 0.25], [131, 0.25], [135, 0.0], [174, 0]],
+  dust: [[0, 0], [92.5, 0], [98.0, 1.0, 'io'], [108, 1.0], [113.5, 0.0], [174, 0]],
+  age: [[0, 0.0], [35.8, 0.0], [41.0, 0.42, 'io'], [99.6, 0.42], [105.0, 0.85, 'io'], [131, 0.85], [174, 0.85]],
+  ceilFade: [[0, 0], [112.4, 0], [114.6, 1.0, 'io'], [174, 1]],
+  scatter: [[0, 0], [119.0, 0], [124.0, 1.0, 'io'], [126.4, 1.0], [131.0, 0.0, 'io'], [174, 0]],
+  wallFade: [[0, 0], [131.4, 0], [137.4, 1.0, 'io'], [174, 1]],
+  statueFade: [[0, 0], [138.6, 0], [141.4, 1.0, 'io'], [147.6, 1.0], [147.7, 0.0, 'step'], [174, 0]],
+  lampsOn: [[0, 0], [149.2, 0], [149.6, 1.0, 'out'], [174, 1]],
+  lampsWave: [[0, -1], [149.3, -0.3], [151.5, 1.2, 'out'], [160, 7.5, 'io'], [174, 9]],
+  ownLight: [[0, 0], [147.6, 0], [147.7, 1.0, 'step'], [174, 1]],
+  fog: [[0, 0.03], [57, 0.03], [68, 0.045], [112, 0.045], [118, 0.022], [131, 0.022], [138, 0.03], [147.6, 0.03], [152, 0.05], [174, 0.042]],
+  tintAmt: [[0, 1], [147.6, 1], [147.7, 0, 'step'], [174, 0]],
+  timeWarp: [[0, 1], [35.6, 1], [37.0, 9.0], [40.4, 9.0], [41.6, 1.0], [174, 1]],
+  vignette: [[0, 1], [174, 1]],
+  floorFade: [[0, 0], [113.0, 0], [116.5, 1.0], [174, 1]],
+  vision: [[0, 0], [13.2, 0], [15.6, 1.0, 'io'], [18.4, 0.95], [23.5, 0.0, 'io'], [174, 0]],
+  smoke: [[0, 1], [174, 1]],
+  lampAbs: [[0, 0], [140.6, 0], [142.2, 1.0], [174, 1]],
+};
+
+// precomputed integral of timeWarp → engine time (sand fall, flicker run fast during the time-lapse)
+const WARP_DT = 1 / 120;
+const warpCum = (() => { const n = Math.ceil(DURATION / WARP_DT) + 2; const a = new Float64Array(n); for (let k = 1; k < n; k++) a[k] = a[k - 1] + evalTrack(TRACKS.timeWarp, (k - 0.5) * WARP_DT) * WARP_DT; return a; })();
+function warpTime(t) { const x = Math.max(0, t) / WARP_DT; const k = Math.min(warpCum.length - 2, Math.floor(x)); return warpCum[k] + (warpCum[k + 1] - warpCum[k]) * (x - k); }
+
+// ---------------------------------------------------------------- film-only scripted interaction
+// wipe strokes on the west mirror (u along wall from south→north, v up the mirror), times in seconds
+const WIPE_STROKES = (() => {
+  const s = [];
+  const stroke = (t0, t1, pts) => { const n = Math.ceil((t1 - t0) * 40); for (let k = 0; k <= n; k++) { const x = k / n; const seg = x * (pts.length - 1); const j = Math.min(pts.length - 2, Math.floor(seg)); const f = seg - j; s.push({ t: t0 + (t1 - t0) * x, u: pts[j][0] + (pts[j + 1][0] - pts[j][0]) * f, v: pts[j][1] + (pts[j + 1][1] - pts[j][1]) * f }); } };
+  stroke(98.6, 99.5, [[0.30, 0.62], [0.42, 0.66], [0.55, 0.64], [0.68, 0.60]]);
+  stroke(99.6, 100.5, [[0.70, 0.52], [0.56, 0.50], [0.42, 0.52], [0.30, 0.48]]);
+  stroke(100.6, 101.6, [[0.32, 0.40], [0.46, 0.36], [0.60, 0.38], [0.71, 0.42]]);
+  stroke(101.8, 102.8, [[0.66, 0.72], [0.52, 0.76], [0.40, 0.74], [0.33, 0.70]]);
+  return s;
+})();
+const WIPE_REGROW = 6.0; // seconds for a wiped patch to fill with dust again
+
+function cursorAt(t) {
+  // returns {kind, x, y, p} in normalised screen space for the film's interaction overlay
+  if (t >= 98.2 && t <= 103.4) {
+    let best = WIPE_STROKES[0];
+    for (const w of WIPE_STROKES) if (w.t <= t) best = w;
+    return { kind: 'wipe', u: best.u, v: best.v, down: WIPE_STROKES.some((w) => Math.abs(w.t - t) < 0.06) };
+  }
+  if (t >= 118.6 && t <= 131.4) {
+    const hold = t >= 119.0 && t <= 126.4;
+    return { kind: 'hold', x: 0.62, y: 0.58, down: hold, p: evalTrack(TRACKS.scatter, t) };
+  }
+  if (t >= 146.6 && t <= 149.6) return { kind: 'click', x: 0.5, y: 0.6, p: Math.max(0, Math.min(1, (t - 147.6) / 1.4)) };
+  return null;
+}
+
+// ---------------------------------------------------------------- evaluate the whole state at time t
+const _f = new Float64Array(3);
+function stateAt(t) {
+  const S = DEFAULT_STATE();
+  for (const [k, keys] of Object.entries(TRACKS)) S[k] = evalTrack(keys, t);
+  S.time = warpTime(t);
+  S.camPos = hermite(CAMERA, t, 'pos'); S.camTarget = hermite(CAMERA, t, 'target'); S.camFov = hermite(CAMERA, t, 'fov')[0];
+  // held lamp: camera-relative with a gentle sway; switches to absolute keys at the end
+  const f = [S.camTarget[0] - S.camPos[0], S.camTarget[1] - S.camPos[1], S.camTarget[2] - S.camPos[2]];
+  const fl = Math.hypot(...f); f[0] /= fl; f[1] /= fl; f[2] /= fl;
+  let r = [f[2] * 1 - f[1] * 0, f[0] * 0 - f[2] * 0, f[0] * 0 - f[1] * 0];
+  r = [-f[2], 0, f[0]]; const rl = Math.hypot(...r) || 1; r = r.map((v) => v / rl);
+  const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  const sway = [Math.sin(t * 0.7) * 0.025, Math.sin(t * 0.53 + 1) * 0.02, Math.sin(t * 0.41 + 2) * 0.02];
+  const rel = [0, 1, 2].map((d) => S.camPos[d] + r[d] * (LAMP_OFF[0] + sway[0]) + u[d] * (LAMP_OFF[1] + sway[1]) + f[d] * (LAMP_OFF[2] + sway[2]));
+  if (S.lampAbs > 0) {
+    const ab = hermite(LAMP_KEYS, t, 'pos');
+    S.lampPos = rel.map((v, d) => v + (ab[d] - v) * S.lampAbs);
+  } else S.lampPos = rel;
+  return S;
+}
+
+function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >= ch.t0) c = ch; return c; }
+
+// 照见 · 镜窟 — interactive web piece (imports are stripped when inlined into the artifact)
+
+(async () => {
+  const BASE = window.GROTTO_BASE || './';
+  const $ = (s) => document.querySelector(s);
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const coarse = matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 600;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // hold points: where each chapter stops and waits for the viewer
+  const HOLD = { gold: 27.0, kneel: 40.6, taken: 53.2, mirror: 70.6, itself: 92.0, dust: 98.4, arise: 119.2, empty: 147.4, lamps: 161.0, room: 174.0 };
+  const RESUME = { dust: 99.4, arise: 131.0 };
+
+  // ------------------------------------------------------------------ boot the grotto
+  const canvas = $('#gl');
+  const loadLine = $('#load-line'), loadBar = $('#load-bar');
+  let g;
+  const setLoad = (p, zh, en) => { loadBar.style.transform = `scaleX(${p.toFixed(3)})`; loadLine.innerHTML = `<span lang="zh">${zh}</span><span lang="en">${en}</span>`; };
+  setLoad(0.02, '壁画正在上墙', 'Hanging the murals');
+  try {
+    g = await createGrotto({
+      THREE, canvas, base: BASE, lattice: coarse ? 4 : 6, motes: coarse ? 50000 : 120000, msaa: coarse ? 0 : 4,
+      pixelRatio: Math.min(devicePixelRatio || 1, coarse ? 1.25 : 1.5),
+      lodSpec: coarse ? [[0, 0, 2], [1, 1, 10], [2, 2, 40], [3, 99, 140]] : undefined,
+      onProgress: (p) => setLoad(0.1 + p * 0.6, '壁画正在上墙', 'Hanging the murals'),
+    });
+  } catch (e) {
+    setLoad(0, '这台设备暂时无法打开窟门（需要 WebGL 2）', 'This device can’t open the cave (WebGL 2 is required)');
+    console.error(e); return;
+  }
+  const resize = () => { g.resize(innerWidth, innerHeight); };
+  resize(); addEventListener('resize', resize);
+  const ptsTimer = setInterval(() => {
+    const n = g.ptsLoaded;
+    setLoad(0.7 + 0.3 * n / g.NPTS, `聚沙 · ${n.toLocaleString('en-US')} / 683,529 粒`, `Gathering ${n.toLocaleString('en-US')} of 683,529 grains`);
+    if (n > 0) { $('#enter').disabled = false; $('#enter').classList.add('ready'); }
+    if (n >= g.NPTS) { clearInterval(ptsTimer); setLoad(1, '683,529 粒，已聚', '683,529 grains, gathered'); }
+  }, 120);
+
+  // ------------------------------------------------------------------ sound (Web Audio)
+  const A = { ctx: null, master: null, music: null, voice: null, sfx: null, buf: {}, cur: null, on: true };
+  async function loadBuf(name) {
+    if (A.buf[name]) return A.buf[name];
+    A.buf[name] = (async () => { const r = await fetch(`${BASE}audio/${name}.mp3`); return A.ctx.decodeAudioData(await r.arrayBuffer()); })();
+    return A.buf[name];
+  }
+  function startAudio() {
+    if (A.ctx) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+    A.ctx = new Ctx(); A.master = A.ctx.createGain(); A.master.connect(A.ctx.destination);
+    A.music = A.ctx.createGain(); A.music.gain.value = 0.0; A.music.connect(A.master);
+    A.voice = A.ctx.createGain(); A.voice.gain.value = 1.0; A.voice.connect(A.master);
+    A.sfx = A.ctx.createGain(); A.sfx.gain.value = 0.7; A.sfx.connect(A.master);
+    loadBuf('ambient').then((b) => { const s = A.ctx.createBufferSource(); s.buffer = b; s.loop = true; s.connect(A.music); s.start(); A.music.gain.setTargetAtTime(0.55, A.ctx.currentTime, 2.5); }).catch(() => {});
+    for (const n of ['bowl', 'bell', 'wind', 'glass', 'chime', 'swirl']) loadBuf(n).catch(() => {});
+    for (let i = 0; i < 4; i++) loadBuf(`vo_${String(i).padStart(2, '0')}`).catch(() => {});
+  }
+  async function sfx(name, gain = 1, rate = 1) {
+    if (!A.ctx) return; try { const b = await loadBuf(name); const s = A.ctx.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const gn = A.ctx.createGain(); gn.gain.value = gain; s.connect(gn); gn.connect(A.sfx); s.start(); } catch (e) { /* sound is optional */ }
+  }
+  async function voice(i) {
+    showSub(i);
+    if (!A.ctx) return;
+    try {
+      const b = await loadBuf(`vo_${String(i).padStart(2, '0')}`);
+      if (A.cur) { try { A.cur.stop(); } catch (e) { /* already stopped */ } }
+      const s = A.ctx.createBufferSource(); s.buffer = b; s.connect(A.voice); s.start(); A.cur = s;
+      const t = A.ctx.currentTime; A.music.gain.cancelScheduledValues(t); A.music.gain.setTargetAtTime(0.3, t, 0.25); A.music.gain.setTargetAtTime(0.55, t + b.duration + 0.3, 1.2);
+      for (let k = i + 1; k < i + 4 && k < LINES.length; k++) loadBuf(`vo_${String(k).padStart(2, '0')}`).catch(() => {});
+    } catch (e) { /* narration still shows as text */ }
+  }
+  $('#sound').addEventListener('click', () => {
+    A.on = !A.on; $('#sound').setAttribute('aria-pressed', String(!A.on)); $('#sound').classList.toggle('off', !A.on);
+    if (A.ctx) A.master.gain.setTargetAtTime(A.on ? 1 : 0, A.ctx.currentTime, 0.1);
+  });
+
+  // ------------------------------------------------------------------ subtitles
+  const subZh = $('#sub-zh'), subEn = $('#sub-en'), sub = $('#sub');
+  let subTimer = 0;
+  function showSub(i) {
+    subZh.textContent = LINES[i][0]; subEn.textContent = LINES[i][1];
+    sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show');
+    clearTimeout(subTimer);
+    const d = (VO.find((c) => c.i === i) || { d: 5 }).d;
+    subTimer = setTimeout(() => sub.classList.remove('show'), (d + 1.2) * 1000);
+  }
+  for (const b of document.querySelectorAll('[data-lang]')) b.addEventListener('click', () => {
+    document.body.dataset.lang = b.dataset.lang;
+    for (const o of document.querySelectorAll('[data-lang]')) o.setAttribute('aria-pressed', String(o === b));
+  });
+
+  // ------------------------------------------------------------------ chapter rail
+  const rail = $('#rail');
+  CHAPTERS.forEach((c, k) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<button type="button" data-k="${k}" aria-label="${c.zh} ${c.en}"><i></i><span class="y">${c.year}</span><span class="z" lang="zh">${c.zh}</span><span class="e" lang="en">${c.en}</span></button>`;
+    rail.appendChild(li);
+  });
+  rail.addEventListener('click', (e) => { const b = e.target.closest('button[data-k]'); if (b && started) goChapter(+b.dataset.k); });
+
+  // ------------------------------------------------------------------ playback
+  let started = false, playing = false, playT = 8.6, segEnd = 8.6, cur = CHAPTERS[0], holdId = null;
+  const played = new Set();
+  let engineTime = 0, lastNow = performance.now();
+  function chapterIndexAt(t) { let k = 0; CHAPTERS.forEach((c, i) => { if (t >= c.t0 - 1e-6) k = i; }); return k; }
+  function play(from, to) {
+    playT = from; segEnd = to; playing = true; holdId = null;
+    $('#next').hidden = true; $('#gate').hidden = true; $('#hint').classList.remove('show'); $('#end').hidden = true;
+    for (const c of VO) if (c.t >= from - 0.05) played.delete(c.i);
+  }
+  function goChapter(k) {
+    const c = CHAPTERS[k]; cur = c; g.clearWipe();
+    yawT = pitchT = 0;
+    gatherV = 0; gatherDone = false; gatherHold = 0; delete RESUME.gold;
+    if (k === 0) play(8.6, HOLD.gold); else play(c.t0, HOLD[c.id]);
+    sfx('bowl', 0.5, 1 + (k % 3) * 0.12);
+  }
+  function setHint(h, ring = false) {
+    if (!h) { $('#hint').classList.remove('show'); return; }
+    $('#hint').innerHTML = `<span lang="zh">${h[0]}</span><span lang="en">${h[1]}</span>` + (ring ? '<svg class="still" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle class="p" cx="12" cy="12" r="9"/></svg>' : '');
+    $('#hint').classList.add('show');
+  }
+  function onHold() {
+    playing = false; holdId = cur.id; holdStart = performance.now();
+    const k = CHAPTERS.indexOf(cur);
+    if (cur.id === 'room') { $('#end').hidden = false; }
+    else { $('#next').hidden = false; }
+    petHint = 0;
+    setHint(cur.hint || (k <= 4 ? ['移动：持灯 · 拖动：环顾', 'Move to carry the lamp · drag to look around'] : null), cur.id === 'empty');
+  }
+  function next() {
+    if (!started) return;
+    if (playing) { // skip to the hold of this chapter
+      if (A.cur) { try { A.cur.stop(); } catch (e) { /* noop */ } }
+      for (const c of VO) if (c.t <= segEnd) played.add(c.i);
+      playT = segEnd; return;
+    }
+    const k = CHAPTERS.indexOf(cur);
+    if (cur.id === 'room') { goChapter(0); return; }
+    const resume = RESUME[cur.id] ?? HOLD[cur.id];
+    const nk = Math.min(CHAPTERS.length - 1, k + 1);
+    play(resume, HOLD[CHAPTERS[nk].id]);
+    sfx('bowl', 0.45, 1 + (nk % 3) * 0.12);
+  }
+  $('#next').addEventListener('click', next);
+  $('#gate').addEventListener('click', () => { next(); sfx('chime', 0.6, 1.0); });
+  // any deliberate input counts as movement for the stillness gesture
+  const touch = () => { lastActivity = performance.now(); };
+  addEventListener('keydown', touch); addEventListener('wheel', touch, { passive: true });
+  addEventListener('keydown', (e) => {
+    if (!started) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { if (document.activeElement && document.activeElement.tagName === 'BUTTON' && e.key !== 'ArrowRight') return; e.preventDefault(); next(); }
+  });
+
+  // ------------------------------------------------------------------ pointer: lamp, look, wipe, hold
+  const P = { x: 0.5, y: 0.66, inside: false, down: false, sx: 0, sy: 0, moved: 0 };
+  let yaw = 0, pitch = 0, yawT = 0, pitchT = 0, scatterHold = 0, scatterV = 0, wiped = 0, scatterPeak = 0;
+  // gestures borrowed from the cave itself: gather the light, catch the petals, be still
+  let gatherV = 0, gatherDone = false, gatherHold = 0, gatherAt = 0, holdVision = 0;
+  let holdStart = 0, lastActivity = performance.now(), petHint = 0;
+  const lampSm = new THREE.Vector3(5.6, 1.3, 0.2);
+  canvas.addEventListener('pointermove', (e) => {
+    const nx = e.clientX / innerWidth, ny = e.clientY / innerHeight;
+    if (Math.abs(nx - P.x) * innerWidth + Math.abs(ny - P.y) * innerHeight > 1.5) lastActivity = performance.now();
+    if (P.down && holdId === 'gold') { P.x = nx; P.y = ny; P.inside = true; return; } // gathering, not looking
+    if (P.down) {
+      const dx = (nx - P.x) * innerWidth, dy = (ny - P.y) * innerHeight; P.moved += Math.abs(dx) + Math.abs(dy);
+      const wipeMode = holdId === 'dust';
+      let didWipe = false;
+      if (wipeMode) {
+        const h = g.hitMirror(nx * 2 - 1, -(ny * 2 - 1));
+        if (h && h.wall) { g.wipeAt(h.wall, h.u, h.v, coarse ? 0.09 : 0.065, 0.55); wiped += 1; didWipe = true; if (Math.random() < 0.08) sfx('wind', 0.12, 2.2); }
+      }
+      if (!didWipe && P.moved > 6) { yawT = clamp(yawT - dx * 0.0042, -1.7, 1.7); pitchT = clamp(pitchT - dy * 0.003, -0.7, 0.7); }
+    }
+    P.x = nx; P.y = ny; P.inside = true;
+  });
+  canvas.addEventListener('pointerdown', (e) => {
+    P.down = true; P.moved = 0; P.x = e.clientX / innerWidth; P.y = e.clientY / innerHeight; P.inside = true;
+    canvas.setPointerCapture(e.pointerId); lastActivity = performance.now();
+    if (holdId === 'arise') { scatterHold = 1; sfx('swirl', 0.5, 1); }
+    if (holdId === 'gold' && !gatherDone) { gatherHold = 1; sfx('swirl', 0.32, 0.72); }
+  });
+  const up = () => {
+    P.down = false; gatherHold = 0;
+    if (holdId === 'arise' && scatterHold) { scatterHold = 0; if (scatterPeak > 0.55 && !played.has(12)) { played.add(12); voice(12); } }
+  };
+  canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('pointerleave', () => { P.inside = false; });
+
+  // ------------------------------------------------------------------ 散花 · falling petals (try to catch one)
+  // they cling to a hand that chases them; hold still and they fall away
+  const PET = new Array(g.NPET).fill(null);
+  const prevLamp = new THREE.Vector3(5.6, 1.3, 0.2);
+  let lampSpeed = 0, slowFor = 0, spawnAcc = 0, stuckMax = 0, petT = 0;
+  const HXr = ROOM.HX - 0.06, HZr = ROOM.HZ - 0.06;
+  const petFocus = new THREE.Vector3();
+  function spawnPetal() {
+    const x = clamp(petFocus.x + (Math.random() - 0.5) * 2.0, -ROOM.HX + 0.2, ROOM.HX - 0.2), z = clamp(petFocus.z + (Math.random() - 0.5) * 2.0, -ROOM.HZ + 0.2, ROOM.HZ - 0.2);
+    return { x, y: 2.35 + Math.random() * 0.45, z,
+      fall: 0.15 + Math.random() * 0.13, f1: 0.6 + Math.random() * 0.9, f2: 0.5 + Math.random() * 0.8, ph: Math.random() * 6.28,
+      spin: Math.random() * 6.28, spinR: (Math.random() - 0.5) * 2.4, tumble: Math.random() * 6.28, tumR: 1.2 + Math.random() * 2.2,
+      size: 0.019 + Math.random() * 0.012, hue: Math.random(), a: 0, st: 0, t: 0, ox: 0, oy: 0, oz: 0 };
+  }
+  function updatePetals(dt, emit, L, interactive, keep) {
+    petT += dt;
+    const sp = prevLamp.distanceTo(L) / Math.max(dt, 1e-3); prevLamp.copy(L);
+    lampSpeed += (Math.min(sp, 6) - lampSpeed) * (1 - Math.exp(-dt * 10));
+    slowFor = lampSpeed < 0.07 ? slowFor + dt : 0;
+    if (emit) spawnAcc += dt * 9;
+    let vis = false, stuck = 0;
+    for (let i = 0; i < PET.length; i++) {
+      let p = PET[i];
+      if (!p) {
+        if (spawnAcc >= 1) { spawnAcc -= 1; p = PET[i] = spawnPetal(); }
+        else { g.setPetal(i, 0, -9, 0, 0, 0, 0, 0, 0); continue; }
+      }
+      if (!keep) { p.st = Math.min(p.st, 0); p.a -= dt * 1.5; if (p.a <= 0) { PET[i] = null; g.setPetal(i, 0, -9, 0, 0, 0, 0, 0, 0); continue; } }
+      if (p.st === 0) {
+        p.x += (Math.sin(petT * p.f1 + p.ph) * 0.11) * dt; p.z += (Math.cos(petT * p.f2 + p.ph * 1.7) * 0.09) * dt; p.y -= p.fall * dt;
+        p.spin += p.spinR * dt; p.tumble += p.tumR * dt; if (keep) p.a = Math.min(1, p.a + dt * 1.2);
+        p.x = clamp(p.x, -HXr, HXr); p.z = clamp(p.z, -HZr, HZr);
+        if (interactive && lampSpeed > 0.3) {
+          const dx = p.x - L.x, dy = p.y - L.y, dz = p.z - L.z, d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 < 0.22 * 0.22) { p.st = 1; p.ox = dx * 0.5; p.oy = dy * 0.5 - 0.03; p.oz = dz * 0.5; if (Math.random() < 0.5) sfx('chime', 0.06, 2.2 + Math.random()); }
+          else if (d2 < 0.55 * 0.55) { const k = Math.min(1, dt * 2.2 * lampSpeed); p.x -= dx * k; p.y -= dy * k * 0.6; p.z -= dz * k; }
+        }
+        if (p.y < 0.03) { p.y = 0.02; p.st = 2; p.t = 0; p.tumble = 1.5708; }
+      } else if (p.st === 1) {
+        p.x = L.x + p.ox + Math.sin(petT * 2.3 + p.ph) * 0.006; p.y = L.y + p.oy + Math.sin(petT * 1.9 + p.ph) * 0.005; p.z = L.z + p.oz;
+        p.spin += p.spinR * dt * 0.25; stuck++; p.size = Math.max(p.size * (1 - dt * 0.6), 0.014);
+        if (slowFor > 1.0 + (p.ph % 1) * 0.6) { p.st = 0; p.fall *= 0.8; }
+      } else {
+        p.t += dt; p.a = Math.max(0, 1 - p.t / 6);
+        if (p.a <= 0) { PET[i] = null; g.setPetal(i, 0, -9, 0, 0, 0, 0, 0, 0); continue; }
+      }
+      g.setPetal(i, p.x, p.y, p.z, p.spin, p.tumble, p.size, p.hue, p.a); vis = true;
+    }
+    if (!emit) spawnAcc = 0;
+    g.commitPetals(vis);
+    // the cave answers: clinging petals, then letting go
+    if (holdId === 'itself') {
+      stuckMax = Math.max(stuckMax * Math.exp(-dt * 0.05), stuck);
+      if (stuck >= 2 && petHint !== 1) { petHint = 1; setHint(['花沾在执着的手上——放下，它自会落', 'Petals cling to a grasping hand — let go, and they fall']); }
+      else if (stuck === 0 && petHint === 1) { petHint = 2; setHint(['放下了，花便落了', 'Let go, and the petals fall']); }
+    }
+  }
+
+  // ------------------------------------------------------------------ 照见壁画 · the lamp names what it lights
+  const CAPS = {
+    W: ['西壁 · 第217窟《观无量寿经变》· 盛唐', 'West wall · Cave 217, Contemplation Sutra tableau · High Tang'],
+    N: ['北壁 · 千佛', 'North wall · The Thousand Buddhas'],
+    S: ['南壁 · 第57窟 观音 · 初唐', 'South wall · Avalokiteśvara, Cave 57 · Early Tang'],
+    EL: ['东壁 · 第103窟 维摩诘 · 盛唐', 'East wall · Vimalakīrti, Cave 103 · High Tang'],
+    ER: ['东壁 · 第401窟 供养菩萨', 'East wall · Offering bodhisattva, Cave 401'],
+    dado: ['壁脚 · 第257窟 鹿王本生 · 北魏', 'Dado · The Deer King jātaka, Cave 257 · Northern Wei'],
+    ceil: ['藻井', 'The caisson ceiling'],
+    cw: ['甬道 · 第61窟《五台山图》· 五代', 'Corridor · Cave 61, Mount Wutai · Five Dynasties'],
+    cq: ['甬道 · 千佛', 'Corridor · The Thousand Buddhas'],
+    cc: ['甬道顶 · 第329窟', 'Corridor ceiling · Cave 329'],
+  };
+  const capEl = $('#cap'); let capKey = null, capCand = null, capDwell = 0, capAway = 0;
+  function nearestMural(L) {
+    const R = ROOM;
+    if (L.x > R.HX - 0.02) { // corridor
+      if (L.y > R.CORR_H - 0.45) return 'cc';
+      return L.z < 0 ? (L.z + R.CORR_HALF < 0.45 ? 'cw' : null) : (R.CORR_HALF - L.z < 0.45 ? 'cq' : null);
+    }
+    const d = { W: L.x + R.HX, E: R.HX - L.x, N: L.z + R.HZ, S: R.HZ - L.z };
+    let k = 'W'; for (const w of ['E', 'N', 'S']) if (d[w] < d[k]) k = w;
+    if (L.y > R.PANEL_TOP + 0.1 && d[k] > 0.25) return 'ceil';
+    if (d[k] > 0.75) return null;
+    if (L.y < R.DADO + 0.12) return 'dado';
+    if (k === 'E') return Math.abs(L.z) < R.DOOR_HALF + R.JAMB ? null : (L.z < 0 ? 'EL' : 'ER');
+    return k;
+  }
+  function muralAt() {
+    const h = g.hitMirror(P.x * 2 - 1, -(P.y * 2 - 1));
+    if (!h || h.t > 4.2) return null;
+    if (h.wall === 'E') return Math.abs(h.point.z) < ROOM.DOOR_HALF + ROOM.JAMB ? null : (h.point.z < 0 ? 'EL' : 'ER');
+    return h.wall;
+  }
+  function updateCaption(dt, S) {
+    const live = started && P.inside && (holdId === 'gold' || holdId === 'kneel' || holdId === 'taken') && (S.dissolve ?? 0) < 0.2;
+    const k = live ? (muralAt() || nearestMural(lampSm)) : null;
+    if (k && k === capCand) capDwell += dt; else { capCand = k; capDwell = 0; }
+    if (k && capDwell > 0.35 && k !== capKey) {
+      capKey = k; capAway = 0;
+      capEl.innerHTML = `<span lang="zh">${CAPS[k][0]}</span><span lang="en">${CAPS[k][1]}</span>`;
+      capEl.classList.add('show');
+    } else if (!k && capKey) { capAway += dt; if (capAway > 0.9) { capKey = null; capEl.classList.remove('show'); } }
+  }
+
+  // ------------------------------------------------------------------ main loop
+  const tmp = new THREE.Vector3(), dir = new THREE.Vector3(), right = new THREE.Vector3(), upv = new THREE.Vector3(0, 1, 0);
+  const ray = new THREE.Vector3();
+  let fpsAcc = 0, fpsN = 0, dprScale = 1;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
+    if (started && playing) {
+      const prev = playT; playT = Math.min(segEnd, playT + dt);
+      for (const c of VO) if (c.t > prev && c.t <= playT && !played.has(c.i)) { played.add(c.i); voice(c.i); }
+      // timeline sound cues
+      if (prev < 41.15 && playT >= 41.15) sfx('bell', 0.75);
+      if (prev < 42.8 && playT >= 42.8) sfx('wind', 0.6);
+      if (prev < 57.2 && playT >= 57.2) sfx('glass', 0.7);
+      if (prev < 149.3 && playT >= 149.3) { for (let k = 0; k < 9; k++) setTimeout(() => sfx('chime', 0.35, [1, 1.122, 1.26, 1.5, 1.68, 2, 2.24, 2.52, 3][k]), 380 + k * k * 95); }
+      const k = chapterIndexAt(playT); if (CHAPTERS[k] !== cur && playT > CHAPTERS[k].t0) cur = CHAPTERS[k];
+      if (playT >= segEnd - 1e-6) onHold();
+    }
+    engineTime += dt;
+    const S = stateAt(playT);
+    S.time = engineTime;
+    if (!started) { S.exposure = 0.0; }
+    // interactions layered over the timeline
+    if (holdId === 'arise') {
+      const target = scatterHold ? 1 : 0;
+      scatterV += (target - scatterV) * (1 - Math.exp(-dt * (scatterHold ? 0.9 : 0.7)));
+      scatterPeak = Math.max(scatterPeak * (scatterHold ? 1 : 0.995), scatterV);
+      S.scatter = Math.max(S.scatter, scatterV);
+    }
+    if (holdId === 'dust') { S.dust = 1; g.regrowDust(dt, 0.05); if (wiped > 60 && !played.has(9)) { played.add(9); voice(9); } }
+    // light walks slowly in the mirrors: each reflection shows the lamp a moment later
+    if (started) S.lampDelay = 0.14;
+    // 金光 · hold to gather the light — it spirals in and becomes the kneeling figure
+    if (holdId === 'gold') {
+      holdVision += (0.85 - holdVision) * (1 - Math.exp(-dt * 1.2));
+      if (!gatherDone) {
+        gatherV = clamp(gatherV + (gatherHold ? dt / 2.8 : -dt / 2.0), 0, 1);
+        if (gatherV >= 1) { gatherDone = true; gatherAt = engineTime; sfx('bowl', 0.6, 0.9); setTimeout(() => sfx('chime', 0.35, 1.5), 420); setHint(null); }
+      } else if (engineTime - gatherAt > 1.8) { RESUME.gold = 28.7; next(); }
+    } else holdVision *= Math.exp(-dt * 0.9);
+    if (holdVision > 0.002) S.vision = Math.max(S.vision, holdVision * (gatherDone ? clamp(1 - (engineTime - gatherAt) / 2.6, 0, 1) : 1));
+    if (gatherV > 0 || gatherDone) {
+      S.gather = gatherDone ? 1 : gatherV;
+      const ap = gatherDone ? 1 : clamp((gatherV - 0.3) / 0.7, 0, 1);
+      if (cur.id === 'gold' || cur.id === 'kneel') S.appear = Math.max(S.appear, ap * ap * (3 - 2 * ap));
+      if (cur.id !== 'gold' && cur.id !== 'kneel') { gatherV = 0; gatherDone = false; }
+    }
+    // 空 · let go, be still for a moment
+    if (holdId === 'empty') {
+      const nowMs = performance.now();
+      const shown = (nowMs - holdStart) / 1000, still = (nowMs - Math.max(lastActivity, holdStart + 1200)) / 1000;
+      const prog = shown < 1.2 ? 0 : clamp(still / 3.4, 0, 1);
+      const ring = document.querySelector('#hint .still .p'); if (ring) ring.style.strokeDashoffset = (56.55 * (1 - prog)).toFixed(2);
+      if (prog >= 1) { holdId = null; sfx('chime', 0.6, 1.0); next(); }
+    }
+    // look-around offsets (decay back toward the scripted camera while playing)
+    if (playing) { yawT *= Math.exp(-dt * 0.8); pitchT *= Math.exp(-dt * 0.8); }
+    yaw += (yawT - yaw) * (1 - Math.exp(-dt * 6)); pitch += (pitchT - pitch) * (1 - Math.exp(-dt * 6));
+    const drift = (!playing && !reduced) ? Math.sin(engineTime * 0.21) * 0.025 : 0;
+    dir.set(S.camTarget[0] - S.camPos[0], S.camTarget[1] - S.camPos[1], S.camTarget[2] - S.camPos[2]);
+    const dist = dir.length(); dir.normalize();
+    dir.applyAxisAngle(upv, yaw + drift);
+    right.crossVectors(dir, upv).normalize();
+    if (right.lengthSq() > 1e-6) dir.applyAxisAngle(right, pitch);
+    S.camTarget = [S.camPos[0] + dir.x * dist, S.camPos[1] + dir.y * dist, S.camPos[2] + dir.z * dist];
+    // the lamp follows the pointer inside the cave
+    if (started && P.inside && (S.lampAbs ?? 0) < 0.5 && S.camPos[1] < 3.0) {
+      ray.set(P.x * 2 - 1, -(P.y * 2 - 1), 0.5);
+      g.apply(S); // update the camera before unprojecting
+      ray.unproject(g.camera).sub(g.camera.position).normalize();
+      tmp.copy(g.camera.position).addScaledVector(ray, 0.72);
+      const inCorr = tmp.x > ROOM.HX - 0.05;
+      tmp.x = clamp(tmp.x, -ROOM.HX + 0.15, ROOM.HX + ROOM.CORR_LEN - 0.3);
+      tmp.z = clamp(tmp.z, inCorr ? -ROOM.CORR_HALF + 0.15 : -ROOM.HZ + 0.15, inCorr ? ROOM.CORR_HALF - 0.15 : ROOM.HZ - 0.15);
+      tmp.y = clamp(tmp.y, 0.3, inCorr ? ROOM.CORR_H - 0.25 : 2.6);
+      lampSm.lerp(tmp, 1 - Math.exp(-dt * 7));
+      S.lampPos = [lampSm.x, lampSm.y, lampSm.z];
+    } else lampSm.set(...S.lampPos);
+    petFocus.set(clamp(S.camPos[0] + dir.x * 0.9, -ROOM.HX, ROOM.HX), 0, clamp(S.camPos[2] + dir.z * 0.9, -ROOM.HZ, ROOM.HZ));
+    updatePetals(dt, (cur.id === 'itself' && playT > 84) || holdId === 'itself', lampSm, started && P.inside && holdId === 'itself', cur.id === 'itself' || cur.id === 'dust');
+    updateCaption(dt, S);
+    g.apply(S); g.render();
+    // rail progress
+    const k = CHAPTERS.indexOf(cur);
+    for (const [i, b] of [...rail.querySelectorAll('button')].entries()) b.classList.toggle('now', i === k && started);
+    const h = HOLD[cur.id]; const prog = clamp((playT - cur.t0) / Math.max(0.01, h - cur.t0), 0, 1);
+    rail.style.setProperty('--p', ((k + prog) / CHAPTERS.length).toFixed(4));
+    // adaptive resolution
+    fpsAcc += dt; fpsN++;
+    if (fpsAcc > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; if (fps < 26 && dprScale > 0.55) { dprScale *= 0.8; g.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, coarse ? 1.25 : 1.5) * dprScale); resize(); } }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ------------------------------------------------------------------ enter / end panel
+  $('#enter').addEventListener('click', () => {
+    if (started) return; startAudio(); started = true;
+    document.body.classList.add('inside'); $('#intro').setAttribute('aria-hidden', 'true');
+    goChapter(0);
+  });
+  $('#again').addEventListener('click', () => { $('#end').hidden = true; goChapter(0); });
+  $('#share').addEventListener('click', async () => {
+    const url = location.href.split('#')[0];
+    try { await navigator.clipboard.writeText(url); $('#share-note').textContent = '链接已复制 · Link copied'; }
+    catch (e) { $('#share-url').hidden = false; $('#share-url').value = url; $('#share-url').select(); $('#share-note').textContent = '请复制这条链接 · Copy this link'; }
+  });
+  // film dialog: pauses the cave's sound while the film plays
+  const filmDlg = $('#film'), filmVid = $('#film-video');
+  const closeFilm = () => { filmDlg.hidden = true; try { filmVid.pause(); } catch (e) { /* noop */ } if (A.ctx && A.on) A.master.gain.setTargetAtTime(1, A.ctx.currentTime, 0.3); };
+  for (const b of document.querySelectorAll('[data-open-film]')) b.addEventListener('click', () => {
+    filmDlg.hidden = false; $('#film-close').focus({ preventScroll: true });
+    if (A.ctx) A.master.gain.setTargetAtTime(0, A.ctx.currentTime, 0.2);
+    filmVid.play().catch(() => { /* the viewer can press play */ });
+  });
+  $('#film-close').addEventListener('click', closeFilm);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !filmDlg.hidden) closeFilm(); });
+  const srcDlg = $('#sources');
+  for (const b of document.querySelectorAll('[data-open-sources]')) b.addEventListener('click', () => { srcDlg.hidden = false; $('#sources-close').focus(); });
+  $('#sources-close').addEventListener('click', () => { srcDlg.hidden = true; });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') srcDlg.hidden = true; });
+  $('#full').addEventListener('click', async () => { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); } catch (e) { /* not available here */ } });
+})();
+
+</script>
