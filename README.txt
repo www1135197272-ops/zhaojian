@@ -11,4 +11,4 @@ Requires a browser with WebGL 2.
 素材出处 Credits
 - 跪姿供养菩萨，莫高窟第328窟（哈佛艺术博物馆 1924.70）三维摄影测量：Harvard Art Museums，CC BY
 - 壁画照片：Wikimedia Commons（公有领域）；千佛、藻井照片：Xiquinho Silva，CC BY 2.0
-- 中文旁白为语音合成；配乐与音效为本作合成
+- 中文旁白为语音合成；窟中的配乐与音效由浏览器实时合成（Web Audio），会随你的动作变化

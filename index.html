@@ -1845,6 +1845,265 @@ function stateAt(t) {
 
 function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >= ch.t0) c = ch; return c; }
 
+// 照见 · 镜窟 — the cave's own sound. A generative score in D pentatonic (the film's key), synthesised
+// live with Web Audio and steered every frame by what the visitor does: a breathing drone, light that
+// shimmers and echoes *late* in the mirrors, wind and falling sand, the lamp's flame, singing bowls,
+// a temple bell, chimes. No music files — only the narration is recorded.
+const ROOT = 73.42; // D2
+const PENTA = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3]; // D E F# A B, just intonation
+
+class CaveSound {
+  constructor() { this.ctx = null; this.on = false; this.offline = false; this.muted = false; this._s = 1913; this._u = -1; this.voiceUntil = 0; }
+  rnd() { let t = (this._s = (this._s + 0x6d2b79f5) | 0); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+  now(t) { return this.offline ? t : this.ctx.currentTime; }
+  g(v = 1) { const n = this.ctx.createGain(); n.gain.value = v; return n; }
+  pan(v) { if (!this.ctx.createStereoPanner) return null; const p = this.ctx.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, v)); return p; }
+  send(v) { const s = this.g(v); s.connect(this.verbIn); return s; }
+  to(param, v, t, tau = 0.25) { param.setTargetAtTime(v, this.now(t), tau); }
+
+  init(ctx) {
+    const c = (this.ctx = ctx);
+    this.offline = typeof OfflineAudioContext !== 'undefined' && c instanceof OfflineAudioContext;
+    // master → gentle bus compression → out
+    this.master = this.g(0);
+    const comp = c.createDynamicsCompressor();
+    comp.threshold.value = -15; comp.knee.value = 10; comp.ratio.value = 5; comp.attack.value = 0.006; comp.release.value = 0.28;
+    this.master.connect(comp); comp.connect(c.destination);
+    // the cave itself: a dark stone room with a long tail
+    this.verb = c.createConvolver(); this.verb.buffer = this.caveIR(3.8);
+    this.verbIn = this.g(1); const vOut = this.g(0.62);
+    this.verbIn.connect(this.verb); this.verb.connect(vOut); vOut.connect(this.master);
+    // buses: music (ducked under the narration), narration, one-shot effects
+    this.music = this.g(1.45); this.music.connect(this.master);
+    this.voice = this.g(1.6); this.voice.connect(this.master); this.voice.connect(this.send(0.08));
+    this.fx = this.g(1); this.fx.connect(this.master);
+    this.pinkBuf = this.noiseBuf(5, 'pink'); this.brownBuf = this.noiseBuf(5, 'brown');
+
+    // 1 · drone: the cave breathing — a harmonic stack on D2, each partial a slowly beating pair
+    this.droneG = this.g(0); const breath = this.g(1);
+    const lfo = c.createOscillator(); lfo.frequency.value = 0.055; const lfoD = this.g(0.16); lfo.connect(lfoD); lfoD.connect(breath.gain); lfo.start(0);
+    this.droneLP = c.createBiquadFilter(); this.droneLP.type = 'lowpass'; this.droneLP.frequency.value = 600; this.droneLP.Q.value = 0.4;
+    this.droneG.connect(breath); breath.connect(this.droneLP); this.droneLP.connect(this.music); this.droneLP.connect(this.send(0.3));
+    [[1, 0.3], [1.5, 0.2], [2, 0.26], [3, 0.17], [4, 0.12], [5, 0.07], [6, 0.05]].forEach(([r, a], k) => {
+      [-1, 1].forEach((side) => {
+        const o = c.createOscillator(); o.type = k === 0 ? 'triangle' : 'sine';
+        o.frequency.value = ROOT * r + side * (0.07 + 0.045 * k);
+        const gg = this.g(a * 0.5), p = this.pan(side * 0.32 * Math.min(1, k * 0.35));
+        o.connect(gg); if (p) { gg.connect(p); p.connect(this.droneG); } else gg.connect(this.droneG);
+        o.start(0);
+      });
+    });
+
+    // 2 · shimmer: light in the mirrors — high pentatonic partials that twinkle, then return late
+    // through four echoes (each a deeper reflection: 3, 5, 8, 11 × the lamp's 0.14 s delay)
+    this.shimG = this.g(0); this.shimParts = [];
+    [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4, 5 / 2].forEach((r, k) => {
+      const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = ROOT * 8 * r;
+      const gg = this.g(0), p = this.pan((k % 2 ? 1 : -1) * (0.2 + 0.55 * ((k * 0.37) % 1)));
+      o.connect(gg); if (p) { gg.connect(p); p.connect(this.shimG); } else gg.connect(this.shimG);
+      o.start(0); this.shimParts.push(gg);
+    });
+    const echo = this.echoNet([0.42, 0.7, 1.12, 1.54], 0.44, 2600);
+    this.shimG.connect(echo.inp); this.shimG.connect(this.music); this.shimG.connect(this.send(0.55));
+    echo.out.connect(this.music); echo.out.connect(this.send(0.45));
+
+    // 3 · pad: the lamp chord — D3 F#3 A3 D4 E4 A4, warm and slow, for emptiness and the thousand lamps
+    this.padG = this.g(0); this.padLP = c.createBiquadFilter(); this.padLP.type = 'lowpass'; this.padLP.frequency.value = 1100;
+    this.padG.connect(this.padLP); this.padLP.connect(this.music); this.padLP.connect(this.send(0.55));
+    [1, 5 / 4, 3 / 2, 2, 9 / 4, 3].forEach((r, k) => {
+      for (const det of [-1.1, 0.9]) {
+        const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = ROOT * 2 * r + det;
+        const gg = this.g(0.085 / (1 + k * 0.35)); o.connect(gg); gg.connect(this.padG); o.start(0);
+      }
+    });
+
+    // 4 · noise beds: wind (brown), gusts, falling sand under a wiping hand, the flame, high air
+    this.wind = this.bed(this.brownBuf, 'bandpass', 480, 0.8, 0.22);
+    this.gust = this.bed(this.pinkBuf, 'bandpass', 1250, 1.3, 0.22);
+    this.sand = this.bed(this.pinkBuf, 'bandpass', 3200, 1.0, 0.18);
+    this.flame = this.bed(this.pinkBuf, 'highpass', 2600, 0.5, 0.05);
+    this.air = this.bed(this.pinkBuf, 'bandpass', 5200, 0.6, 0.35);
+
+    // 5 · riser: held light gathering — rises an octave as the gold condenses
+    this.riserG = this.g(0); this.riserG.connect(this.music); this.riserG.connect(this.send(0.7));
+    this.risers = [4, 6].map((m) => { const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = ROOT * m; const gg = this.g(m === 4 ? 1 : 0.45); o.connect(gg); gg.connect(this.riserG); o.start(0); return o; });
+    this.on = true;
+    return this;
+  }
+
+  // ---------------------------------------------------------------- building blocks
+  noiseBuf(sec, kind) {
+    const c = this.ctx, n = Math.floor(sec * c.sampleRate), b = c.createBuffer(2, n, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch); let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, br = 0;
+      for (let i = 0; i < n; i++) {
+        const w = this.rnd() * 2 - 1;
+        if (kind === 'pink') { // Paul Kellet's pink filter
+          b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759; b2 = 0.969 * b2 + w * 0.153852;
+          b3 = 0.8665 * b3 + w * 0.3104856; b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898;
+          d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926;
+        } else { br = (br + 0.02 * w) / 1.02; d[i] = br * 3.4; }
+      }
+      const f = Math.floor(c.sampleRate * 0.06); // seamless loop
+      for (let i = 0; i < f; i++) { const x = i / f; d[i] = d[i] * x + d[n - f + i] * (1 - x); }
+    }
+    return b;
+  }
+  caveIR(sec) {
+    const c = this.ctx, sr = c.sampleRate, n = Math.floor(sec * sr), b = c.createBuffer(2, n, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch); let lp = 0;
+      for (let i = 0; i < n; i++) {
+        const t = i / sr, dark = 0.18 + 0.78 * Math.min(1, t / sec); // the tail darkens as it fades
+        lp += ((this.rnd() * 2 - 1) - lp) * (1 - dark);
+        d[i] = lp * Math.exp(-t * 6.9 / sec) * (t < 0.015 ? t / 0.015 : 1);
+      }
+      // stone walls close by: early reflections
+      for (const [ms, a] of [[7, 0.55], [13, 0.4], [19, 0.33], [29, 0.26], [41, 0.2], [57, 0.14]]) d[Math.floor((ms + ch * 2.3) * sr / 1000)] += a * (ch ? -1 : 1);
+    }
+    return b;
+  }
+  bed(buf, type, f, q, send) {
+    const c = this.ctx, s = c.createBufferSource(); s.buffer = buf; s.loop = true;
+    const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+    const gg = this.g(0); s.connect(fl); fl.connect(gg); gg.connect(this.music); gg.connect(this.send(send));
+    s.start(0, this.rnd() * 3);
+    return { f: fl, g: gg };
+  }
+  echoNet(times, fb, lpf) {
+    const c = this.ctx, inp = this.g(1), out = this.g(0.62);
+    times.forEach((t, k) => {
+      const dl = c.createDelay(3); dl.delayTime.value = t;
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = lpf / (1 + k * 0.3);
+      const fbg = this.g(fb), p = this.pan([-0.6, 0.5, -0.25, 0.75][k]);
+      inp.connect(dl); dl.connect(lp); lp.connect(fbg); fbg.connect(dl);
+      if (p) { lp.connect(p); p.connect(out); } else lp.connect(out);
+    });
+    return { inp, out };
+  }
+
+  // ---------------------------------------------------------------- one-shots
+  // singing bowl: inharmonic partials, each a slowly beating pair
+  bowl(at, f, gain = 0.2, pan = 0, decay = 9, attack = 0.004, send = 0.65) {
+    const c = this.ctx, t0 = this.now(at), ny = c.sampleRate * 0.45;
+    const out = this.g(gain), p = this.pan(pan), tail = p || out;
+    if (p) out.connect(p); tail.connect(this.fx); tail.connect(this.send(send));
+    [[1, 1, 1], [2.76, 0.5, 0.62], [5.4, 0.3, 0.4], [8.93, 0.16, 0.26], [13.34, 0.07, 0.16]].forEach(([r, a, dk], k) => {
+      if (f * r > ny) return;
+      for (const det of [0, 0.32 + 0.11 * k]) {
+        const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f * r + det;
+        const e = c.createGain(); e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(a * (det ? 0.55 : 1), t0 + attack);
+        e.gain.setTargetAtTime(0, t0 + attack, (decay * dk) / 4.5);
+        o.connect(e); e.connect(out); o.start(t0); o.stop(t0 + attack + decay * dk * 1.5 + 0.2);
+      }
+    });
+  }
+  chime(at, f, gain = 0.06, pan = 0) { this.bowl(at, f, gain, pan, 2.6, 0.002, 0.75); }
+  // temple bell: a hum below the strike, minor-third partials, a long bloom
+  bell(at, f = ROOT * 2, gain = 0.3) {
+    const c = this.ctx, t0 = this.now(at), out = this.g(gain); out.connect(this.fx); out.connect(this.send(0.8));
+    [[0.5, 0.6, 1], [1, 1, 0.8], [1.19, 0.42, 0.55], [1.5, 0.36, 0.48], [2, 0.4, 0.4], [2.52, 0.18, 0.28], [3, 0.14, 0.2], [4.1, 0.07, 0.14]].forEach(([r, a, dk], k) => {
+      const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f * r + (k % 2 ? 0.27 : -0.19);
+      const e = c.createGain(); e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(a, t0 + 0.005); e.gain.setTargetAtTime(0, t0 + 0.005, (13 * dk) / 4.5);
+      o.connect(e); e.connect(out); o.start(t0); o.stop(t0 + 13 * dk * 1.5 + 0.3);
+    });
+    const s = c.createBufferSource(); s.buffer = this.pinkBuf; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
+    const e = c.createGain(); e.gain.setValueAtTime(0.5, t0); e.gain.setTargetAtTime(0, t0, 0.02);
+    s.connect(lp); lp.connect(e); e.connect(out); s.start(t0, this.rnd() * 2); s.stop(t0 + 0.3);
+  }
+  thud(at, gain = 0.5) {
+    const c = this.ctx, t0 = this.now(at), o = c.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(118, t0); o.frequency.exponentialRampToValueAtTime(44, t0 + 0.7);
+    const e = c.createGain(); e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(gain, t0 + 0.006); e.gain.setTargetAtTime(0, t0 + 0.01, 0.32);
+    o.connect(e); e.connect(this.fx); e.connect(this.send(0.9)); o.start(t0); o.stop(t0 + 2.5);
+  }
+  whoosh(at, dur = 3, gain = 0.12, up = true) {
+    const c = this.ctx, t0 = this.now(at), s = c.createBufferSource(); s.buffer = this.pinkBuf; s.loop = true;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.0;
+    bp.frequency.setValueAtTime(up ? 190 : 4200, t0); bp.frequency.exponentialRampToValueAtTime(up ? 4200 : 170, t0 + dur);
+    const e = c.createGain(); e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(gain, t0 + dur * 0.65); e.gain.linearRampToValueAtTime(0, t0 + dur);
+    s.connect(bp); bp.connect(e); e.connect(this.fx); e.connect(this.send(0.8)); s.start(t0, this.rnd() * 2); s.stop(t0 + dur + 0.1);
+  }
+  // a run of chimes up the pentatonic scale
+  sparkle(at, n = 6, base = ROOT * 16, gain = 0.07, offsets = null) {
+    for (let i = 0; i < n; i++) {
+      const f = base * PENTA[i % 5] * 2 ** Math.floor(i / 5);
+      this.chime(at + (offsets ? offsets[i] : i * 0.13), f, gain * (1 - 0.35 * i / n), i % 2 ? 0.45 : -0.45);
+    }
+  }
+
+  // ---------------------------------------------------------------- what the cave answers to
+  cue(name, o = {}, at = 0) {
+    if (!this.on) return;
+    const r = this.rnd(), deg = (k) => PENTA[((k % 5) + 5) % 5];
+    switch (name) {
+      case 'enter': this.bowl(at + 0.15, ROOT * 2, 0.34, 0, 14, 0.02); break;
+      case 'chapter': this.bowl(at, ROOT * 4 * deg(o.k || 0), 0.18, (r - 0.5) * 0.6, 10); break;
+      case 'gatherStart': this.whoosh(at, 2.6, 0.06, true); break;
+      case 'gathered': this.thud(at, 0.5); this.bowl(at + 0.05, ROOT * 4, 0.3, 0, 11); this.sparkle(at + 0.35, 6, ROOT * 16, 0.06); break;
+      case 'caption': this.chime(at, ROOT * 16 * deg(Math.floor(r * 5)), 0.05, (r - 0.5) * 0.8); break;
+      case 'bell': this.bell(at, ROOT * 2, 0.34); break;
+      case 'gust': this.whoosh(at, 4.5, 0.16, true); break;
+      case 'mirror': this.whoosh(at, 4.2, 0.09, true); this.bowl(at + 3.6, ROOT * 6, 0.15, 0.2, 10, 0.4); break;
+      case 'catch': this.chime(at, ROOT * 16 * deg(Math.floor(r * 5)) * (r > 0.6 ? 2 : 1), 0.045, (r - 0.5) * 0.9); break;
+      case 'cling': [0, 0.13, 0.31].forEach((d, k) => this.chime(at + d, ROOT * 16 * deg(k * 2), 0.055, (k - 1) * 0.5)); break;
+      case 'release': this.bowl(at, ROOT * 8, 0.11, 0, 8, 0.25); break;
+      case 'scatter': this.whoosh(at, 2.4, 0.13, true); break;
+      case 'regather': this.whoosh(at, 2.8, 0.1, false); this.chime(at + 2.4, ROOT * 12, 0.05, 0); break;
+      case 'still': this.bowl(at, ROOT * 2, 0.36, 0, 16, 1.4); this.bowl(at + 0.02, ROOT * 3, 0.12, 0.3, 12, 1.4); break;
+      case 'lampsWave': this.sparkle(at + 0.38, 9, ROOT * 8, 0.09, [0, 0.095, 0.38, 0.855, 1.52, 2.375, 3.42, 4.655, 6.08]); break;
+      case 'end': this.bowl(at + 0.3, ROOT * 4, 0.26, 0, 12); this.bowl(at + 5.6, ROOT * 6, 0.13, -0.4, 10); break;
+      default: break;
+    }
+  }
+
+  setMuted(m, at = 0) { if (!this.ctx) return; this.muted = m; this.to(this.master.gain, m ? 0 : 0.88, at, m ? 0.12 : 0.5); }
+  start(at = 0) { this.setMuted(false, at); }
+
+  // called every frame with the cave's state; levels glide toward their targets
+  update(p, t) {
+    if (!this.on || (!this.offline && this._u >= 0 && t - this._u < 1 / 30)) return;
+    this._u = t;
+    const sp = Math.min(1, (p.speed || 0) / 1.4);
+    let drone = 0.2, shim = 0.05, pad = 0, wind = 0.03, gust = 0, air = 0.012, flame = 0.014, riser = 0;
+    switch (p.chapter) {
+      case 'gold': drone = 0.16 + 0.1 * p.vision; shim = 0.05 + 0.16 * p.vision; wind = 0.05; air = 0.02; break;
+      case 'kneel': drone = 0.24; shim = 0.05; wind = 0.025; flame = 0.02; break;
+      case 'taken': drone = 0.2; wind = 0.05 + 0.3 * p.wind; gust = 0.07 * p.wind; shim = 0.035; break;
+      case 'mirror': drone = 0.22; shim = 0.06 + 0.16 * p.mirror + 0.12 * sp; flame = 0.016; break;
+      case 'itself': drone = 0.24; shim = 0.2 + 0.1 * sp; pad = 0.04; break;
+      case 'dust': drone = 0.18; wind = 0.08 + 0.1 * p.sandFall; gust = 0.02; shim = 0.06; break;
+      case 'arise': drone = 0.16 * (1 - 0.4 * p.scatter); shim = 0.1 + 0.22 * p.scatter; air = 0.03; break;
+      case 'empty': drone = 0.12 * (1 - 0.7 * p.wall); shim = 0.05 * (1 - 0.6 * p.wall); air = 0.05; pad = 0.03 + 0.07 * p.wall; flame = 0.008; break;
+      case 'lamps': drone = 0.1; pad = 0.12 + 0.16 * p.lamps; shim = 0.08 + 0.12 * p.lamps; air = 0.02; break;
+      case 'room': drone = 0.1; pad = 0.26; shim = 0.12; air = 0.02; break;
+      default: break;
+    }
+    if (p.gather > 0 && !p.gatherDone) riser = 0.08 * p.gather;
+    const on = p.started ? 1 : 0;
+    this.to(this.droneG.gain, drone * on, t, 1.2);
+    this.to(this.droneLP.frequency, 320 + 1150 * Math.min(1, p.energy ?? 0.6), t, 0.6);
+    this.to(this.shimG.gain, shim * on, t, 1.0);
+    const tw = 1 + sp * 1.6;
+    this.shimParts.forEach((gg, k) => this.to(gg.gain, 0.12 * Math.pow(0.5 + 0.5 * Math.sin(t * (0.11 + k * 0.031) * tw + k * 1.9), 3), t, 0.5));
+    this.to(this.padG.gain, pad * on, t, 1.5);
+    this.to(this.padLP.frequency, 800 + 900 * (p.lamps || 0), t, 1.0);
+    this.to(this.wind.g.gain, wind * on, t, 0.8);
+    this.to(this.wind.f.frequency, 380 + 240 * Math.sin(t * 0.11) + 120 * Math.sin(t * 0.29 + 1) + 320 * (p.wind || 0), t, 0.5);
+    this.to(this.gust.g.gain, gust * on, t, 0.6);
+    this.to(this.air.g.gain, air * on, t, 1.2);
+    this.to(this.air.f.frequency, 4600 + 1400 * Math.sin(t * 0.07), t, 1.0);
+    this.to(this.flame.g.gain, flame * on * (0.5 + 0.5 * Math.abs(Math.sin(t * 8.7) * Math.sin(t * 3.1 + 1))), t, 0.05);
+    this.to(this.sand.g.gain, 0.26 * (p.wipe || 0) * on, t, 0.05);
+    this.to(this.sand.f.frequency, 2400 + 2600 * (p.wipe || 0), t, 0.05);
+    this.to(this.riserG.gain, riser * on, t, 0.25);
+    this.risers.forEach((o, k) => this.to(o.frequency, ROOT * (k ? 6 : 4) * (1 + (p.gather || 0)), t, 0.25));
+    // the narration speaks over a lowered bed
+    const speaking = (this.offline ? t : this.ctx.currentTime) < this.voiceUntil;
+    this.to(this.music.gain, speaking ? 0.62 : 1.45, t, speaking ? 0.12 : 0.9);
+  }
+}
+
 // 照见 · 镜窟 — interactive web piece (imports are stripped when inlined into the artifact)
 
 (async () => {
@@ -1885,40 +2144,66 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
   }, 120);
 
   // ------------------------------------------------------------------ sound (Web Audio)
-  const A = { ctx: null, master: null, music: null, voice: null, sfx: null, buf: {}, cur: null, on: true };
+  const A = { ctx: null, snd: null, buf: {}, cur: null, on: true };
   async function loadBuf(name) {
     if (A.buf[name]) return A.buf[name];
     A.buf[name] = (async () => { const r = await fetch(`${BASE}audio/${name}.mp3`); return A.ctx.decodeAudioData(await r.arrayBuffer()); })();
     return A.buf[name];
   }
+  // iPhone / iPad: Web Audio is silenced by the ring/silent switch unless the page asks for media
+  // playback — via navigator.audioSession where Safari has it, and by keeping a silent <audio> loop
+  // playing on older iOS. Every later tap also wakes a context the browser suspended or interrupted.
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  let keepAlive = null;
+  function silentWavURL(sec = 1, sr = 8000) {
+    const n = sr * sec, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  function wakeAudio() {
+    if (!A.ctx || document.hidden) return;
+    if (A.ctx.state !== 'running') A.ctx.resume().catch(() => {});
+    if (keepAlive && keepAlive.paused) keepAlive.play().catch(() => {});
+  }
   function startAudio() {
     if (A.ctx) return;
     const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
-    A.ctx = new Ctx(); A.master = A.ctx.createGain(); A.master.connect(A.ctx.destination);
-    A.music = A.ctx.createGain(); A.music.gain.value = 0.0; A.music.connect(A.master);
-    A.voice = A.ctx.createGain(); A.voice.gain.value = 1.0; A.voice.connect(A.master);
-    A.sfx = A.ctx.createGain(); A.sfx.gain.value = 0.7; A.sfx.connect(A.master);
-    loadBuf('ambient').then((b) => { const s = A.ctx.createBufferSource(); s.buffer = b; s.loop = true; s.connect(A.music); s.start(); A.music.gain.setTargetAtTime(0.55, A.ctx.currentTime, 2.5); }).catch(() => {});
-    for (const n of ['bowl', 'bell', 'wind', 'glass', 'chime', 'swirl']) loadBuf(n).catch(() => {});
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+    A.ctx = new Ctx({ latencyHint: 'playback' });
+    A.ctx.resume?.().catch(() => {});
+    // unlock inside the tap: one silent sample (older iOS needs a sound started in the gesture)
+    try { const b = A.ctx.createBuffer(1, 1, 22050), s = A.ctx.createBufferSource(); s.buffer = b; s.connect(A.ctx.destination); s.start(0); } catch (e) { /* noop */ }
+    if (isIOS) {
+      try { keepAlive = new Audio(silentWavURL()); keepAlive.loop = true; keepAlive.setAttribute('playsinline', ''); keepAlive.play().catch(() => {}); } catch (e) { keepAlive = null; }
+    }
+    try { if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: '照见 · 镜窟', artist: 'Seeing Through — Mogao Cave 328' }); } catch (e) { /* optional */ }
+    for (const ev of ['pointerdown', 'touchend', 'keydown']) addEventListener(ev, wakeAudio, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { A.ctx.suspend?.().catch(() => {}); if (keepAlive) keepAlive.pause(); }
+      else wakeAudio();
+    });
+    // the cave's sound is synthesised live (sound.js); only the narration is recorded
+    try { A.snd = new CaveSound().init(A.ctx); if (A.on) A.snd.start(); A.snd.cue('enter'); } catch (e) { A.snd = null; console.warn(e); }
     for (let i = 0; i < 4; i++) loadBuf(`vo_${String(i).padStart(2, '0')}`).catch(() => {});
   }
-  async function sfx(name, gain = 1, rate = 1) {
-    if (!A.ctx) return; try { const b = await loadBuf(name); const s = A.ctx.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const gn = A.ctx.createGain(); gn.gain.value = gain; s.connect(gn); gn.connect(A.sfx); s.start(); } catch (e) { /* sound is optional */ }
-  }
+  const cue = (name, o) => { if (A.snd) A.snd.cue(name, o); };
   async function voice(i) {
     showSub(i);
     if (!A.ctx) return;
     try {
       const b = await loadBuf(`vo_${String(i).padStart(2, '0')}`);
       if (A.cur) { try { A.cur.stop(); } catch (e) { /* already stopped */ } }
-      const s = A.ctx.createBufferSource(); s.buffer = b; s.connect(A.voice); s.start(); A.cur = s;
-      const t = A.ctx.currentTime; A.music.gain.cancelScheduledValues(t); A.music.gain.setTargetAtTime(0.3, t, 0.25); A.music.gain.setTargetAtTime(0.55, t + b.duration + 0.3, 1.2);
+      if (!A.snd) return;
+      const s = A.ctx.createBufferSource(); s.buffer = b; s.connect(A.snd.voice); s.start(); A.cur = s;
+      A.snd.voiceUntil = A.ctx.currentTime + b.duration + 0.15;
       for (let k = i + 1; k < i + 4 && k < LINES.length; k++) loadBuf(`vo_${String(k).padStart(2, '0')}`).catch(() => {});
     } catch (e) { /* narration still shows as text */ }
   }
   $('#sound').addEventListener('click', () => {
     A.on = !A.on; $('#sound').setAttribute('aria-pressed', String(!A.on)); $('#sound').classList.toggle('off', !A.on);
-    if (A.ctx) A.master.gain.setTargetAtTime(A.on ? 1 : 0, A.ctx.currentTime, 0.1);
+    if (A.ctx) { wakeAudio(); if (A.snd) A.snd.setMuted(!A.on); }
   });
 
   // ------------------------------------------------------------------ subtitles
@@ -1960,7 +2245,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
     yawT = pitchT = 0;
     gatherV = 0; gatherDone = false; gatherHold = 0; delete RESUME.gold;
     if (k === 0) play(8.6, HOLD.gold); else play(c.t0, HOLD[c.id]);
-    sfx('bowl', 0.5, 1 + (k % 3) * 0.12);
+    cue('chapter', { k });
   }
   function setHint(h, ring = false) {
     if (!h) { $('#hint').classList.remove('show'); return; }
@@ -1970,7 +2255,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
   function onHold() {
     playing = false; holdId = cur.id; holdStart = performance.now();
     const k = CHAPTERS.indexOf(cur);
-    if (cur.id === 'room') { $('#end').hidden = false; }
+    if (cur.id === 'room') { $('#end').hidden = false; cue('end'); }
     else { $('#next').hidden = false; }
     petHint = 0;
     setHint(cur.hint || (k <= 4 ? ['移动：持灯 · 拖动：环顾', 'Move to carry the lamp · drag to look around'] : null), cur.id === 'empty');
@@ -1987,10 +2272,10 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
     const resume = RESUME[cur.id] ?? HOLD[cur.id];
     const nk = Math.min(CHAPTERS.length - 1, k + 1);
     play(resume, HOLD[CHAPTERS[nk].id]);
-    sfx('bowl', 0.45, 1 + (nk % 3) * 0.12);
+    cue('chapter', { k: nk });
   }
   $('#next').addEventListener('click', next);
-  $('#gate').addEventListener('click', () => { next(); sfx('chime', 0.6, 1.0); });
+  $('#gate').addEventListener('click', () => { next(); cue('still'); });
   // any deliberate input counts as movement for the stillness gesture
   const touch = () => { lastActivity = performance.now(); };
   addEventListener('keydown', touch); addEventListener('wheel', touch, { passive: true });
@@ -2004,7 +2289,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
   let yaw = 0, pitch = 0, yawT = 0, pitchT = 0, scatterHold = 0, scatterV = 0, wiped = 0, scatterPeak = 0;
   // gestures borrowed from the cave itself: gather the light, catch the petals, be still
   let gatherV = 0, gatherDone = false, gatherHold = 0, gatherAt = 0, holdVision = 0;
-  let holdStart = 0, lastActivity = performance.now(), petHint = 0;
+  let holdStart = 0, lastActivity = performance.now(), petHint = 0, wipeV = 0;
   const lampSm = new THREE.Vector3(5.6, 1.3, 0.2);
   canvas.addEventListener('pointermove', (e) => {
     const nx = e.clientX / innerWidth, ny = e.clientY / innerHeight;
@@ -2016,7 +2301,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
       let didWipe = false;
       if (wipeMode) {
         const h = g.hitMirror(nx * 2 - 1, -(ny * 2 - 1));
-        if (h && h.wall) { g.wipeAt(h.wall, h.u, h.v, coarse ? 0.09 : 0.065, 0.55); wiped += 1; didWipe = true; if (Math.random() < 0.08) sfx('wind', 0.12, 2.2); }
+        if (h && h.wall) { g.wipeAt(h.wall, h.u, h.v, coarse ? 0.09 : 0.065, 0.55); wiped += 1; didWipe = true; wipeV = Math.min(1, wipeV + 0.2); }
       }
       if (!didWipe && P.moved > 6) { yawT = clamp(yawT - dx * 0.0042, -1.7, 1.7); pitchT = clamp(pitchT - dy * 0.003, -0.7, 0.7); }
     }
@@ -2025,12 +2310,12 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
   canvas.addEventListener('pointerdown', (e) => {
     P.down = true; P.moved = 0; P.x = e.clientX / innerWidth; P.y = e.clientY / innerHeight; P.inside = true;
     canvas.setPointerCapture(e.pointerId); lastActivity = performance.now();
-    if (holdId === 'arise') { scatterHold = 1; sfx('swirl', 0.5, 1); }
-    if (holdId === 'gold' && !gatherDone) { gatherHold = 1; sfx('swirl', 0.32, 0.72); }
+    if (holdId === 'arise') { scatterHold = 1; cue('scatter'); }
+    if (holdId === 'gold' && !gatherDone) { gatherHold = 1; cue('gatherStart'); }
   });
   const up = () => {
     P.down = false; gatherHold = 0;
-    if (holdId === 'arise' && scatterHold) { scatterHold = 0; if (scatterPeak > 0.55 && !played.has(12)) { played.add(12); voice(12); } }
+    if (holdId === 'arise' && scatterHold) { scatterHold = 0; cue('regather'); if (scatterPeak > 0.55 && !played.has(12)) { played.add(12); voice(12); } }
   };
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('pointerleave', () => { P.inside = false; });
@@ -2069,7 +2354,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
         p.x = clamp(p.x, -HXr, HXr); p.z = clamp(p.z, -HZr, HZr);
         if (interactive && lampSpeed > 0.3) {
           const dx = p.x - L.x, dy = p.y - L.y, dz = p.z - L.z, d2 = dx * dx + dy * dy + dz * dz;
-          if (d2 < 0.22 * 0.22) { p.st = 1; p.ox = dx * 0.5; p.oy = dy * 0.5 - 0.03; p.oz = dz * 0.5; if (Math.random() < 0.5) sfx('chime', 0.06, 2.2 + Math.random()); }
+          if (d2 < 0.22 * 0.22) { p.st = 1; p.ox = dx * 0.5; p.oy = dy * 0.5 - 0.03; p.oz = dz * 0.5; if (Math.random() < 0.6) cue('catch'); }
           else if (d2 < 0.55 * 0.55) { const k = Math.min(1, dt * 2.2 * lampSpeed); p.x -= dx * k; p.y -= dy * k * 0.6; p.z -= dz * k; }
         }
         if (p.y < 0.03) { p.y = 0.02; p.st = 2; p.t = 0; p.tumble = 1.5708; }
@@ -2088,8 +2373,8 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
     // the cave answers: clinging petals, then letting go
     if (holdId === 'itself') {
       stuckMax = Math.max(stuckMax * Math.exp(-dt * 0.05), stuck);
-      if (stuck >= 2 && petHint !== 1) { petHint = 1; setHint(['花沾在执着的手上——放下，它自会落', 'Petals cling to a grasping hand — let go, and they fall']); }
-      else if (stuck === 0 && petHint === 1) { petHint = 2; setHint(['放下了，花便落了', 'Let go, and the petals fall']); }
+      if (stuck >= 2 && petHint !== 1) { petHint = 1; cue('cling'); setHint(['花沾在执着的手上——放下，它自会落', 'Petals cling to a grasping hand — let go, and they fall']); }
+      else if (stuck === 0 && petHint === 1) { petHint = 2; cue('release'); setHint(['放下了，花便落了', 'Let go, and the petals fall']); }
     }
   }
 
@@ -2134,7 +2419,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
     if (k && capDwell > 0.35 && k !== capKey) {
       capKey = k; capAway = 0;
       capEl.innerHTML = `<span lang="zh">${CAPS[k][0]}</span><span lang="en">${CAPS[k][1]}</span>`;
-      capEl.classList.add('show');
+      capEl.classList.add('show'); cue('caption');
     } else if (!k && capKey) { capAway += dt; if (capAway > 0.9) { capKey = null; capEl.classList.remove('show'); } }
   }
 
@@ -2148,10 +2433,10 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
       const prev = playT; playT = Math.min(segEnd, playT + dt);
       for (const c of VO) if (c.t > prev && c.t <= playT && !played.has(c.i)) { played.add(c.i); voice(c.i); }
       // timeline sound cues
-      if (prev < 41.15 && playT >= 41.15) sfx('bell', 0.75);
-      if (prev < 42.8 && playT >= 42.8) sfx('wind', 0.6);
-      if (prev < 57.2 && playT >= 57.2) sfx('glass', 0.7);
-      if (prev < 149.3 && playT >= 149.3) { for (let k = 0; k < 9; k++) setTimeout(() => sfx('chime', 0.35, [1, 1.122, 1.26, 1.5, 1.68, 2, 2.24, 2.52, 3][k]), 380 + k * k * 95); }
+      if (prev < 40.55 && playT >= 40.55) cue('bell');
+      if (prev < 42.8 && playT >= 42.8) cue('gust');
+      if (prev < 53.6 && playT >= 53.6) cue('mirror');
+      if (prev < 149.3 && playT >= 149.3) cue('lampsWave');
       const k = chapterIndexAt(playT); if (CHAPTERS[k] !== cur && playT > CHAPTERS[k].t0) cur = CHAPTERS[k];
       if (playT >= segEnd - 1e-6) onHold();
     }
@@ -2174,7 +2459,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
       holdVision += (0.85 - holdVision) * (1 - Math.exp(-dt * 1.2));
       if (!gatherDone) {
         gatherV = clamp(gatherV + (gatherHold ? dt / 2.8 : -dt / 2.0), 0, 1);
-        if (gatherV >= 1) { gatherDone = true; gatherAt = engineTime; sfx('bowl', 0.6, 0.9); setTimeout(() => sfx('chime', 0.35, 1.5), 420); setHint(null); }
+        if (gatherV >= 1) { gatherDone = true; gatherAt = engineTime; cue('gathered'); setHint(null); }
       } else if (engineTime - gatherAt > 1.8) { RESUME.gold = 28.7; next(); }
     } else holdVision *= Math.exp(-dt * 0.9);
     if (holdVision > 0.002) S.vision = Math.max(S.vision, holdVision * (gatherDone ? clamp(1 - (engineTime - gatherAt) / 2.6, 0, 1) : 1));
@@ -2190,7 +2475,7 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
       const shown = (nowMs - holdStart) / 1000, still = (nowMs - Math.max(lastActivity, holdStart + 1200)) / 1000;
       const prog = shown < 1.2 ? 0 : clamp(still / 3.4, 0, 1);
       const ring = document.querySelector('#hint .still .p'); if (ring) ring.style.strokeDashoffset = (56.55 * (1 - prog)).toFixed(2);
-      if (prog >= 1) { holdId = null; sfx('chime', 0.6, 1.0); next(); }
+      if (prog >= 1) { holdId = null; cue('still'); next(); }
     }
     // look-around offsets (decay back toward the scripted camera while playing)
     if (playing) { yawT *= Math.exp(-dt * 0.8); pitchT *= Math.exp(-dt * 0.8); }
@@ -2219,6 +2504,13 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
     updatePetals(dt, (cur.id === 'itself' && playT > 84) || holdId === 'itself', lampSm, started && P.inside && holdId === 'itself', cur.id === 'itself' || cur.id === 'dust');
     updateCaption(dt, S);
     g.apply(S); g.render();
+    // the cave's sound follows what is on screen and what your hand does
+    wipeV *= Math.exp(-dt * 3.5);
+    if (A.snd) A.snd.update({
+      started, chapter: cur.id, vision: S.vision || 0, gather: gatherDone ? 1 : gatherV, gatherDone, wind: S.wind || 0,
+      sandFall: S.sand || 0, mirror: Math.min(1, (S.mirrorReveal || 0) / 12) * (1 - (S.wallFade || 0)), speed: lampSpeed, wipe: wipeV,
+      scatter: S.scatter || 0, wall: S.wallFade || 0, lamps: S.lampsOn || 0, energy: Math.min(1, (S.lampPower || 0) * 0.8 + (S.vision || 0) * 0.4),
+    }, engineTime);
     // rail progress
     const k = CHAPTERS.indexOf(cur);
     for (const [i, b] of [...rail.querySelectorAll('button')].entries()) b.classList.toggle('now', i === k && started);
@@ -2245,10 +2537,10 @@ function chapterAt(t) { let c = CHAPTERS[0]; for (const ch of CHAPTERS) if (t >=
   });
   // film dialog: pauses the cave's sound while the film plays
   const filmDlg = $('#film'), filmVid = $('#film-video');
-  const closeFilm = () => { filmDlg.hidden = true; try { filmVid.pause(); } catch (e) { /* noop */ } if (A.ctx && A.on) A.master.gain.setTargetAtTime(1, A.ctx.currentTime, 0.3); };
+  const closeFilm = () => { filmDlg.hidden = true; try { filmVid.pause(); } catch (e) { /* noop */ } if (A.snd && A.on) A.snd.setMuted(false); };
   for (const b of document.querySelectorAll('[data-open-film]')) b.addEventListener('click', () => {
     filmDlg.hidden = false; $('#film-close').focus({ preventScroll: true });
-    if (A.ctx) A.master.gain.setTargetAtTime(0, A.ctx.currentTime, 0.2);
+    if (A.snd) A.snd.setMuted(true);
     filmVid.play().catch(() => { /* the viewer can press play */ });
   });
   $('#film-close').addEventListener('click', closeFilm);
